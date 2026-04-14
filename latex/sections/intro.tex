@@ -1,0 +1,91 @@
+\section{Introduction}
+\label{sec:intro}
+
+The Brazilian equity market is among the most volatile in the emerging-market
+universe, where returns are shaped not only by firm-level fundamentals but also by
+sharp swings in the domestic monetary policy cycle.
+Between 2021 and 2023, the Banco Central do Brasil raised the benchmark SELIC rate by
+523 basis points---from 2.00\% to 13.75\%---the most aggressive tightening cycle in
+two decades, triggered by a combination of post-pandemic supply shocks and persistent
+inflationary pressure.
+This episode illustrates a structural feature of the Brazilian market: asset-return
+dynamics shift substantially across interest-rate regimes, with aggregate Sharpe ratios
+varying from $-0.23$ during rising-rate periods to $+0.88$ during stable-rate periods
+in our sample.
+Classical portfolio optimization frameworks, however, are largely regime-agnostic.
+Mean-variance optimization \citep{Markowitz1952} and its variants estimate a single
+covariance structure over the entire sample, ignoring the non-stationarity induced by
+monetary-policy transitions.
+Rule-based approaches such as the $1/N$ strategy \citep{DeMiguel2007} and Risk Parity
+\citep{Qian2011} are robust to estimation error but equally insensitive to prevailing
+macroeconomic conditions.
+
+A natural extension is to use reinforcement learning (RL), which can, in principle,
+learn a state-dependent policy that adapts asset weights to the current economic
+environment.
+Online RL agents trained on rolling windows of live market data have been applied to
+portfolio management with promising results \citep{Jiang2017}, but this paradigm
+introduces a subtle methodological problem: the agent can implicitly learn from
+future information during training because the reward is computed on the same data
+stream that updates the policy, creating a look-ahead bias that inflates reported
+performance.
+Offline RL \citep{Levine2020} resolves this by training entirely on a fixed, historical
+dataset---the offline dataset---and deploying the learned policy only on held-out
+data.
+Conservative Q-Learning (CQL) \citep{Kumar2020} is a state-of-the-art offline RL
+algorithm that avoids the overestimation of Q-values for out-of-distribution actions
+by adding a conservatism penalty to the Bellman loss, making it particularly well
+suited to the noisy, non-stationary nature of financial time series.
+
+Despite the growing body of work applying RL to asset allocation, three important
+gaps remain in the literature.
+First, most studies focus on developed markets; evidence from the Brazilian market,
+with its distinctive macro-financial dynamics, is scarce.
+Second, the predominant reward signal is the Sharpe ratio, which treats upside and
+downside volatility symmetrically and can incentivize the agent to accept large tail
+losses.
+Third, offline RL methods have rarely been combined with explicit macroeconomic
+regime information in the state representation, leaving the potential of
+regime-conditional portfolio decisions largely unexplored.
+
+This paper addresses all three gaps.
+Our specific contributions are as follows:
+
+\begin{enumerate}
+  \item \textbf{Regime-aware state representation.}
+        We construct a 225-dimensional state vector that combines asset-level
+        return statistics with macroeconomic variables---SELIC regime indicators
+        (one-hot encoded as rising, stable, or falling), CDS spreads, credit
+        spreads, and Brazilian implied volatility---enabling the agent to condition
+        portfolio decisions on the prevailing monetary-policy environment.
+
+  \item \textbf{CVaR reward function.}
+        We replace the standard Sharpe-based reward with a composite signal that
+        penalizes tail risk via the Conditional Value-at-Risk at the 95\%
+        confidence level while retaining a linear expected-return component
+        weighted by a risk-aversion parameter $\lambda = 0.5$.
+        This incentivizes the agent to control downside risk explicitly, a
+        property especially valuable in the fat-tailed return distributions
+        observed in emerging markets.
+
+  \item \textbf{Rigorous out-of-sample evaluation.}
+        We employ a strict walk-forward protocol with 35 quarterly folds, training
+        on 252-day windows and evaluating on 63-day windows, ensuring zero
+        look-ahead bias.
+        We benchmark the CQL agent against Equal-Weight, Minimum-Variance, and
+        Risk-Parity portfolios and conduct an ablation study that isolates the
+        contributions of the offline paradigm, the CVaR reward, and the macro
+        state variables.
+\end{enumerate}
+
+The remainder of the paper is organized as follows.
+Section~\ref{sec:litreview} reviews the related literature on classical portfolio
+optimization, reinforcement learning in finance, offline RL, CVaR-based objectives,
+and macroeconomic regime detection.
+Section~\ref{sec:data} describes the dataset, data sources, and regime
+classification.
+Section~\ref{sec:methodology} presents the MDP formulation, the CQL algorithm,
+the reward function, and the evaluation protocol.
+Section~\ref{sec:results} reports out-of-sample results and the ablation study.
+Section~\ref{sec:discussion} interprets the findings and discusses limitations.
+Section~\ref{sec:conclusion} concludes.

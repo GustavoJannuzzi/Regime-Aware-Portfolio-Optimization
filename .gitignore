@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Environment (NEVER commit secrets)
+.env
+
+# Raw data (imutável, não versionar)
+data/raw/
+
+# d3rlpy training logs (199MB — excluir)
+d3rlpy_logs/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Large compiled artifacts
+outputs/models/*.pt
+*.ckpt
+
+# LaTeX aux files
+latex/*.aux
+latex/*.log
+latex/*.out
+latex/*.synctex.gz
+latex/*.bbl
+latex/*.blg
+latex/*.toc
+latex/*.lof
+latex/*.lot
+latex/*.fls
+latex/*.fdb_latexmk
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# macOS
+.DS_Store

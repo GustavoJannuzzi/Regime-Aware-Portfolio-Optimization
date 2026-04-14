@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(jupyter:*)",
+      "Bash(pip install *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Read(**)",
+      "Write(notebooks/**)",
+      "Write(src/**)",
+      "Write(outputs/**)",
+      "Write(latex/**)",
+      "Write(.claude/memory.md)",
+      "Write(data/external/**)",
+      "Write(data/processed/**)"
+    ],
+    "deny": [
+      "Write(data/raw/**)",
+      "Bash(rm -rf *)",
+      "Write(.env)"
+    ]
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./"]
+    },
+    "jupyter": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-jupyter"]
+    }
+  },
+  "autoApprove": [
+    "Read",
+    "Write(outputs/**)",
+    "Write(latex/**)",
+    "Write(.claude/memory.md)"
+  ]
+}

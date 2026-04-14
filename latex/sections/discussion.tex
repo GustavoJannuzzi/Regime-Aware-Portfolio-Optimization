@@ -1,0 +1,113 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Economic Interpretation of the CVaR Reward}
+\label{subsec:disc_cvar}
+
+The superiority of the CVaR reward (A3, A4) over the Sharpe-based reward (A1, A2)
+in the Brazilian equity market is consistent with two well-documented structural
+features of emerging-market return distributions.
+First, Brazilian equities exhibit pronounced negative skewness and excess kurtosis
+relative to developed-market benchmarks, driven by periodic currency crises,
+commodity price shocks, and fiscal uncertainty.
+The Sharpe ratio, by treating upside and downside deviations symmetrically, implicitly
+values a large positive outlier as much as it penalizes an equal negative one.
+The CVaR reward, by contrast, focuses exclusively on the left tail and therefore
+incentivizes the agent to avoid large drawdowns even at some cost in expected return.
+In an environment where tail events are more frequent and severe than a normal
+distribution would predict, this asymmetric objective yields portfolios that are
+more appropriate for risk-averse investors.
+
+Second, the parameter $\lambda = 0.5$ in the reward function
+(Equation~\eqref{eq:cvar_reward}) creates a meaningful tension between return
+maximization and tail-risk minimization.
+The ablation results suggest that this balance is well calibrated: the CVaR-based
+agents do not sacrifice too much expected return in pursuit of tail protection,
+as evidenced by the competitive Calmar ratios relative to pure return-maximizing
+strategies.
+
+\subsection{Role of Macroeconomic State Variables}
+\label{subsec:disc_macro}
+
+The incremental performance of A4 over A3 confirms that macroeconomic
+regime information is a valuable input to the portfolio allocation decision in the
+Brazilian market.
+The SELIC one-hot encoding provides the agent with a direct signal about the
+monetary policy stance that is not fully captured by the trailing return and
+volatility statistics already present in the state vector.
+During rising-rate regimes, the combination of tighter financial conditions, reduced
+earnings visibility, and elevated risk premiums creates an environment in which
+active regime conditioning adds the most value.
+
+The CDS proxy and credit spread play a complementary role, capturing dimensions
+of credit-market stress that are correlated with but not identical to the interest-rate
+regime.
+Periods of elevated CDS spreads, for instance, can precede formal COPOM rate
+decisions, giving the agent a forward-looking signal about macro deterioration
+that the backward-looking SELIC one-hot encoding would miss until the next committee
+meeting.
+
+These findings are consistent with the theoretical argument that macro-financial
+variables reduce the \emph{irreducible} component of portfolio uncertainty by
+improving the precision of the agent's beliefs about the return-generating process.
+From a practical standpoint, all three macro variables (SELIC direction, CDS proxy,
+credit spread) are observable in real time, making the A4 agent directly implementable
+without reliance on forecasts or latent state estimates.
+
+\subsection{Limitations}
+\label{subsec:disc_limitations}
+
+Several limitations of this study should be acknowledged.
+
+\textbf{Transaction costs.}
+The evaluation protocol excludes transaction costs.
+Given that the CQL agent rebalances quarterly---the same frequency as the
+benchmarks---the additional cost from deviation of agent weights from benchmark
+weights is unlikely to reverse the qualitative results, but it may reduce the
+magnitude of outperformance, particularly for institutional investors subject to
+market-impact costs on large B3 positions.
+Future work should incorporate a realistic cost model, including bid-ask spreads
+and market-impact functions.
+
+\textbf{No short selling.}
+The simplex constraint (Equation~\eqref{eq:action_space}) restricts the agent to
+long-only positions.
+This is consistent with regulatory constraints on many Brazilian retail and
+institutional funds but prevents the agent from hedging systematic risk by taking
+short positions in overvalued assets or index futures.
+Extending the framework to a box-constrained action space would be a natural
+next step.
+
+\textbf{Regime shift risk.}
+The regime classification is based on COPOM decisions, which are discrete events
+occurring eight times per year.
+In periods of rapid or unprecedented monetary-policy changes---such as the
+emergency rate cuts during the COVID-19 pandemic---the regime label may lag
+the true economic environment by several weeks.
+More sophisticated regime-detection methods, such as hidden Markov models or
+real-time macro nowcasting, could reduce this lag.
+
+\textbf{Asset universe concentration.}
+The ten-asset universe, while representative of the B3 blue-chip segment, is
+highly concentrated in financials and commodity-linked sectors.
+Expanding the universe to include small- and mid-cap stocks, fixed-income
+instruments, or real-estate investment trusts (FIIs) would test the
+generalizability of the proposed framework.
+
+\subsection{Practical Implications}
+\label{subsec:disc_implications}
+
+For Brazilian fund managers, the results suggest that regime-aware portfolio
+strategies offer meaningful improvements in downside risk management during
+tightening cycles.
+The largest gains from the A4 agent are concentrated precisely in the environment
+most challenging for equity investors---rising rates---suggesting that the
+incremental cost of computing and incorporating the macro state vector is well
+justified by the reduction in tail risk during these periods.
+The quarterly rebalancing frequency is compatible with the operational constraints
+of most domestic equity funds and does not require intraday or high-frequency
+monitoring.
+The use of an offline RL framework furthermore implies that the strategy can be
+backtested and validated on historical data without the methodological concerns
+about look-ahead bias that complicate the evaluation of online RL agents, making
+it more suitable for regulatory and audit scrutiny.

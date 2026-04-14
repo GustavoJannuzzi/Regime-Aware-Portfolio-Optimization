@@ -1,0 +1,58 @@
+{
+  "tickers": [
+    "ABEV3.SA",
+    "B3SA3.SA",
+    "BBAS3.SA",
+    "BBDC4.SA",
+    "ITUB4.SA",
+    "PETR4.SA",
+    "RENT3.SA",
+    "SUZB3.SA",
+    "VALE3.SA",
+    "WEGE3.SA"
+  ],
+  "date_range": {
+    "start": "2015-01-02",
+    "end": "2024-12-30"
+  },
+  "n_obs": 2487,
+  "n_tickers": 10,
+  "prices_shape": [
+    2487,
+    10
+  ],
+  "returns_shape": [
+    2486,
+    10
+  ],
+  "macro_shape": [
+    2487,
+    7
+  ],
+  "macro_columns": [
+    "selic",
+    "ipca",
+    "spread_credito",
+    "selic_regime",
+    "selic_up",
+    "selic_stable",
+    "selic_down"
+  ],
+  "missing_pct_returns": {
+    "ABEV3.SA": 0.0,
+    "B3SA3.SA": 0.0,
+    "BBAS3.SA": 0.0,
+    "BBDC4.SA": 0.0,
+    "ITUB4.SA": 0.0,
+    "PETR4.SA": 0.0,
+    "RENT3.SA": 0.0,
+    "SUZB3.SA": 0.0,
+    "VALE3.SA": 0.0,
+    "WEGE3.SA": 0.0
+  },
+  "selic_regime_counts": {
+    "rising": 584,
+    "stable": 1048,
+    "falling": 855
+  }
+}

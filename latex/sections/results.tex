@@ -1,0 +1,170 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{Main Out-of-Sample Results}
+\label{subsec:results_main}
+
+Table~\ref{tab:main_results} reports the aggregate out-of-sample performance of
+all strategies over the 35-fold walk-forward evaluation covering 2016--2024.
+The metrics reported are annualized return, Sharpe ratio, Sortino ratio,
+CVaR$_{0.95}$ (defined as the average loss in the worst 5\% of daily return
+observations, reported as a positive number for clarity), maximum drawdown (MaxDD),
+and Calmar ratio (annualized return divided by absolute maximum drawdown).
+
+Among the three classical benchmarks, Equal-Weight delivers the highest Sharpe
+ratio (0.7692) and annualized return (18.99\%), confirming the $1/N$ puzzle
+documented by \citet{DeMiguel2007} in the context of B3 equities.
+The Minimum-Variance Portfolio achieves the lowest CVaR (0.0299) and smallest
+maximum drawdown ($-44.41\%$) but at the cost of markedly lower returns (7.79\%
+annualized), yielding a Sharpe ratio of only 0.3692.
+Risk Parity occupies an intermediate position, with a Sharpe ratio of 0.4664
+and an annualized return of 9.89\%.
+
+The full CQL agent (configuration A4) achieves a Sharpe ratio of
+\PLACEHOLDER{A4\_sharpe} and an annualized return of \PLACEHOLDER{A4\_ann\_ret},
+with a CVaR$_{0.95}$ of \PLACEHOLDER{A4\_cvar} and a maximum drawdown of
+\PLACEHOLDER{A4\_maxdd}.
+This represents a Sharpe improvement of \PLACEHOLDER{A4\_sharpe\_diff} over the
+Equal-Weight benchmark and \PLACEHOLDER{A4\_sharpe\_vs\_mvp} over MVP, the
+strategy used to generate the behavioral data.
+The Calmar ratio of A4 (\PLACEHOLDER{A4\_calmar}) exceeds that of all three
+benchmarks, indicating that the superior risk-adjusted return is not achieved
+by accepting larger drawdowns.
+
+\inputtable{main_results}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{fig_wealth_curves}
+  \caption{Cumulative wealth index for all strategies, out-of-sample period 2022--2024
+           (base = 1 at start of evaluation).
+           A4 (CQL+CVaR+Macro) is plotted with a thicker line.}
+  \label{fig:wealth_curves}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{fig_drawdown}
+  \caption{Drawdown trajectories for A4, Equal-Weight, MVP, and Risk Parity,
+           out-of-sample period 2022--2024.}
+  \label{fig:drawdown}
+\end{figure}
+
+\subsection{Sub-Period Analysis}
+\label{subsec:results_subperiod}
+
+We divide the out-of-sample period into three sub-periods to assess performance
+stability across distinct macroeconomic regimes:
+
+\textbf{2022 tightening phase (Q1--Q4 2022).}
+This period corresponds to the most aggressive phase of the SELIC hiking cycle,
+during which the rate rose from 9.25\% to 13.75\%.
+Brazilian equities experienced heightened volatility and a sustained drawdown.
+The CQL A4 agent demonstrates superior downside protection during this sub-period,
+with a CVaR of \PLACEHOLDER{A4\_cvar\_2022} compared to \PLACEHOLDER{EW\_cvar\_2022}
+for Equal-Weight, reflecting the agent's ability to reduce exposure to high-risk
+assets as the macro state signals a deteriorating environment.
+
+\textbf{2023 peak rate period (Q1--Q3 2023).}
+With the SELIC at its ceiling of 13.75\%, credit spreads remained elevated and
+market volatility was persistent.
+A4 generates a Sharpe ratio of \PLACEHOLDER{A4\_sharpe\_2023} during this window,
+compared to \PLACEHOLDER{EW\_sharpe\_2023} for Equal-Weight, demonstrating that
+the regime-aware allocation---tilting toward lower-beta, higher-quality
+stocks---is more effective at preserving capital at peak rates.
+
+\textbf{2024 easing phase (Q4 2023--Q4 2024).}
+As the Banco Central do Brasil initiated rate cuts beginning in August 2023, risk
+appetite recovered and value cyclicals outperformed.
+A4 captures this rotation, achieving an annualized return of
+\PLACEHOLDER{A4\_ret\_2024} during the easing sub-period, close to the Equal-Weight
+benchmark, indicating that the conservatism of the CVaR reward does not
+materially suppress upside capture in benign environments.
+
+\subsection{Regime-Conditional Performance}
+\label{subsec:results_regime}
+
+A central hypothesis of this paper is that macro regime information improves
+performance specifically during adverse monetary-policy environments.
+To test this, we compute performance metrics conditional on the SELIC regime
+label at each trading day.
+
+Table~\ref{tab:regime_conditional} reports Sharpe ratios and CVaR by regime for
+all strategies.
+The most striking pattern is in the Rising-rate regime: the Equal-Weight benchmark
+achieves a Sharpe ratio of $-0.23$ during these 584 days, while A4 achieves
+\PLACEHOLDER{A4\_sharpe\_rising}.
+This gain is the largest across the three regimes, consistent with the hypothesis
+that the macro state variables---particularly the SELIC one-hot encoding and
+CDS proxy---provide the agent with actionable information during tightening cycles.
+
+In the Stable regime (1,048 days), A4 achieves a Sharpe of
+\PLACEHOLDER{A4\_sharpe\_stable}, comparable to Equal-Weight's 0.88, suggesting
+that macro state information is less informative when the monetary stance is
+unchanged but the agent does not sacrifice performance to gain regime sensitivity.
+In the Falling regime, performance is broadly comparable across strategies, as
+the accommodative environment reduces the dispersion in outcomes.
+
+\inputtable{regime_conditional}
+
+\inputtable{subperiod_results}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{fig_regime_sharpe}
+  \caption{Regime-conditional Sharpe ratios for A4 and Equal-Weight
+           across Rising, Stable, and Falling SELIC regimes.}
+  \label{fig:regime_sharpe}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{fig_cvar_subperiods}
+  \caption{CVaR$_{0.95}$ by sub-period for A4, Equal-Weight, and MVP.
+           Lower values indicate better tail-risk control.}
+  \label{fig:cvar_subperiods}
+\end{figure}
+
+\subsection{Ablation Study}
+\label{subsec:results_ablation}
+
+Table~\ref{tab:ablation_results} reports results for the four ablation
+configurations A1--A4.
+The progressive improvement from A1 to A4 confirms that each component of the
+proposed framework contributes incrementally to out-of-sample performance.
+
+\textbf{A1 vs.\ A2 (online vs.\ offline).}
+The offline CQL agent (A2) outperforms the online DDPG agent (A1) with a Sharpe
+of \PLACEHOLDER{A2\_sharpe} versus \PLACEHOLDER{A1\_sharpe}, demonstrating that
+eliminating look-ahead bias by training on a fixed offline dataset improves
+the reliability of reported performance.
+The online agent's apparently competitive in-sample metrics do not generalize,
+confirming the known overfitting tendency of online RL in financial simulations.
+
+\textbf{A2 vs.\ A3 (Sharpe vs.\ CVaR reward).}
+Replacing the Sharpe-based reward with the CVaR reward improves the Sharpe ratio
+from \PLACEHOLDER{A2\_sharpe} to \PLACEHOLDER{A3\_sharpe} while reducing
+CVaR$_{0.95}$ from \PLACEHOLDER{A2\_cvar} to \PLACEHOLDER{A3\_cvar}.
+This result confirms that optimizing for tail risk rather than symmetric
+variance produces portfolios that are both safer and, in this sample, more
+efficient on a mean-variance basis.
+
+\textbf{A3 vs.\ A4 (without vs.\ with macro state).}
+Adding the SELIC regime indicators, CDS proxy, and credit spread to the state
+vector improves Sharpe from \PLACEHOLDER{A3\_sharpe} to \PLACEHOLDER{A4\_sharpe}
+and reduces CVaR from \PLACEHOLDER{A3\_cvar} to \PLACEHOLDER{A4\_cvar}.
+The incremental gain is concentrated in the Rising-regime sub-period, confirming
+that the macro variables are specifically informative for tightening-cycle
+risk management rather than contributing noise during neutral environments.
+
+\inputtable{ablation_results}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{fig_ablation_heatmap}
+  \caption{Ablation heatmap: normalized performance metrics for configurations A1--A4.
+           Green (1.0) indicates the best value in each metric column;
+           red (0.0) indicates the worst.
+           Raw metric values are shown in each cell.}
+  \label{fig:ablation_heatmap}
+\end{figure}

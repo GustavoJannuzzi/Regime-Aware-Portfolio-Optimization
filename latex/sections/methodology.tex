@@ -1,0 +1,220 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Markov Decision Process Formulation}
+\label{subsec:mdp}
+
+Portfolio rebalancing is cast as a discrete-time Markov Decision Process (MDP)
+$\mathcal{M} = (\mathcal{S}, \mathcal{A}, \mathcal{R}, \mathcal{P}, \gamma)$,
+where $\mathcal{S}$ is the state space, $\mathcal{A}$ is the action space,
+$\mathcal{R}$ is the reward function, $\mathcal{P}$ is the transition kernel, and
+$\gamma \in (0,1)$ is the discount factor.
+
+\textbf{State space.}
+At each rebalancing date $t$, the state $s_t \in \mathcal{S} \subset \mathbb{R}^{225}$
+is a concatenation of five groups of features:
+\begin{enumerate}
+  \item \emph{Normalized log returns} $\tilde{r}_{i,t-k}$ for $i = 1,\dots,10$
+        and $k = 0,\dots,19$ (lookback $T = 20$ days), standardized to zero mean
+        and unit variance over a rolling window: 200 dimensions.
+  \item \emph{Realized volatility} $\hat{\sigma}_{i,t}$ estimated over the same
+        20-day window for each asset: 10 dimensions.
+  \item \emph{Momentum} $m_{i,t} = \sum_{k=1}^{20} r_{i,t-k}$ for each asset:
+        10 dimensions.
+  \item \emph{Macroeconomic scalars}: CDS proxy (1 dimension) and credit spread
+        (1 dimension), both normalized.
+  \item \emph{SELIC regime one-hot encoding}: three binary indicators
+        (Rising, Stable, Falling): 3 dimensions.
+\end{enumerate}
+The total state dimension is $200 + 10 + 10 + 1 + 1 + 3 = 225$.
+
+\textbf{Action space.}
+The action $a_t \in \mathcal{A}$ is a portfolio weight vector
+$\mathbf{w}_t = (w_{1,t}, \dots, w_{N,t})$ constrained to the $N$-dimensional
+unit simplex:
+\begin{equation}
+  \mathcal{A} = \Delta^N = \left\{ \mathbf{w} \in \mathbb{R}^N : w_i \geq 0,\;
+  \sum_{i=1}^N w_i = 1 \right\},
+  \label{eq:action_space}
+\end{equation}
+with $N = 10$.
+This formulation enforces long-only positions and full investment, consistent with
+the regulatory constraints applicable to many Brazilian fund structures.
+
+\textbf{Reward function.}
+The reward at time $t$ combines a tail-risk penalty with a linear expected-return
+component:
+
+\begin{equation}
+  r_t = -\text{CVaR}_{\alpha}(\mathbf{R}_{p,t}) + \lambda \, \mathbb{E}[\mathbf{R}_{p,t}]
+  \label{eq:cvar_reward}
+\end{equation}
+
+where $\mathbf{R}_{p,t} = \mathbf{w}_t^\top \mathbf{r}_t$ is the portfolio return,
+$\alpha = 0.95$ is the CVaR confidence level, and $\lambda = 0.5$ controls the
+trade-off between downside-risk minimization and expected-return maximization.
+Negative CVaR values indicate severe drawdowns, so the minus sign in
+Equation~\eqref{eq:cvar_reward} converts the risk penalty into a reward to be
+maximized.
+
+The CVaR at confidence level $\alpha$ is defined as:
+
+\begin{equation}
+  \text{CVaR}_{\alpha}(X) = -\frac{1}{1-\alpha}
+  \int_{-\infty}^{\text{VaR}_\alpha(X)} x \, dF_X(x)
+  \label{eq:cvar_def}
+\end{equation}
+
+where $\text{VaR}_\alpha(X) = \inf\{x : F_X(x) \geq \alpha\}$ is the
+Value-at-Risk threshold and $F_X$ is the cumulative distribution function of $X$.
+Operationally, CVaR is estimated as the average of the $(1-\alpha)$ worst realized
+returns in a trailing window of $T = 20$ days.
+
+The discount factor is set to $\gamma = 0.99$, reflecting a preference for near-term
+rewards while still valuing long-horizon portfolio performance.
+
+\subsection{Conservative Q-Learning}
+\label{subsec:cql}
+
+Standard Q-learning applied to offline data suffers from distributional shift:
+the Bellman operator may assign high Q-values to actions that are absent from
+the offline dataset and that would perform poorly in deployment.
+CQL \citep{Kumar2020} addresses this by augmenting the standard SAC loss with a
+conservatism penalty that pushes down Q-values for out-of-distribution
+actions while pulling up Q-values for actions observed in the behavioral data.
+The CQL loss is:
+
+\begin{equation}
+  \mathcal{L}_{\text{CQL}}(\theta) = \mathcal{L}_{\text{SAC}}(\theta)
+  + \alpha_{\text{CQL}} \cdot \mathbb{E}_{s \sim \mathcal{D}}\!\left[
+    \log \sum_{a} \exp Q_\theta(s, a)
+    - \mathbb{E}_{a \sim \beta(s)}\!\left[ Q_\theta(s, a) \right]
+  \right]
+  \label{eq:cql_loss}
+\end{equation}
+
+where $\mathcal{L}_{\text{SAC}}(\theta)$ is the standard Soft Actor-Critic
+Bellman residual loss, $\mathcal{D}$ is the offline dataset,
+$\beta(s)$ is the behavioral policy distribution at state $s$,
+and $\alpha_{\text{CQL}} > 0$ is the conservatism coefficient
+(distinct from the CVaR confidence level $\alpha$).
+
+The first term inside the brackets,
+$\log \sum_a \exp Q_\theta(s, a)$, is the log-sum-exp over the current policy's
+action distribution and approximates the maximum Q-value; minimizing it
+discourages the agent from assigning high value to actions not grounded in the
+behavioral data.
+The second term, $\mathbb{E}_{a \sim \beta(s)}[Q_\theta(s, a)]$, rewards
+accurate value estimation for actions that were actually taken by the behavioral
+policy, preventing the conservatism penalty from depressing Q-values uniformly.
+
+In financial applications, the conservatism property of CQL is particularly
+valuable: it prevents the agent from constructing highly concentrated or
+speculative portfolios that would only appear optimal by exploiting spurious
+correlations in a finite training sample.
+This implicit regularization is analogous to the shrinkage estimators commonly
+used in classical mean-variance optimization but is learned end-to-end
+through the offline RL training procedure.
+
+The CQL agent is implemented using the \texttt{d3rlpy} library
+\citep{Seno2022} with a two-layer actor network of hidden dimension 256 and a
+corresponding critic.
+Portfolio weights are produced by a softmax output activation that
+automatically enforces the simplex constraint in Equation~\eqref{eq:action_space}.
+The hyperparameters $\alpha_{\text{CQL}}$ and $\lambda$ are selected via
+cross-validation on a held-out validation fold within the training set.
+
+\subsection{Walk-Forward Evaluation Protocol}
+\label{subsec:walkforward}
+
+The primary evaluation methodology is a walk-forward cross-validation scheme
+that strictly avoids look-ahead bias.
+The full 2,487-day sample is partitioned into 35 overlapping folds.
+Each fold consists of a 252-trading-day training window followed by an
+immediately subsequent 63-trading-day test window, corresponding to approximately
+one year of training data and one quarter of test data.
+The windows are advanced in 63-day increments, so successive training sets overlap
+but the test windows are non-overlapping and contiguous.
+
+At each fold:
+\begin{enumerate}
+  \item The offline dataset $\mathcal{D}$ is constructed from returns, state
+        vectors, and rewards in the training window, with transitions generated
+        by the behavioral policy (MVP) applied to the training data.
+  \item The CQL agent is trained from scratch on $\mathcal{D}$ for a fixed
+        number of gradient steps.
+  \item The trained policy is deployed on the test window to generate daily
+        portfolio weights; no weight updates are made during the test window.
+  \item Performance metrics are recorded for the test window.
+\end{enumerate}
+Aggregate out-of-sample performance metrics are computed by concatenating the
+35 test windows into a single 2,205-day out-of-sample return series (2016--2024).
+This protocol guarantees that training always precedes testing in calendar time,
+preventing any form of look-ahead bias.
+
+The initial offline dataset used for Section~\ref{subsec:mdp} covers the
+six-year in-sample period 2016--2021 ($N = 1{,}485$ transitions for training,
+$N_{\text{eval}} = 748$ for validation) with the behavioral policy
+generating transitions according to the MVP allocation.
+The evaluation set (2022--2024) serves as a strict holdout for the final
+model-selection decision.
+
+\subsection{Benchmark Strategies}
+\label{subsec:benchmarks}
+
+Three classical benchmark strategies are evaluated under the same walk-forward
+protocol:
+
+\textbf{Equal-Weight (EW).} Portfolio weights are fixed at $w_i = 1/N = 0.1$
+for all assets at every rebalancing date.
+This naive diversification rule \citep{DeMiguel2007} requires no estimation
+and serves as a baseline that is robust to estimation error.
+
+\textbf{Minimum-Variance Portfolio (MVP).} Weights are obtained by solving
+$\min_{\mathbf{w} \in \Delta^N} \mathbf{w}^\top \hat{\Sigma} \mathbf{w}$,
+where $\hat{\Sigma}$ is the sample covariance matrix estimated on the trailing
+252-day training window.
+The MVP is the classical risk-minimization benchmark and is used as the
+behavioral policy to generate the offline dataset.
+
+\textbf{Risk Parity (RP).} Weights are set so that each asset contributes equally
+to total portfolio variance.
+Risk contributions are equalized iteratively using the algorithm of
+\citet{Maillard2010}.
+
+All three benchmarks are rebalanced quarterly to align with the CQL agent's
+evaluation schedule, and transaction costs are excluded from the primary analysis
+to ensure comparability across methods.
+
+\subsection{Ablation Study Design}
+\label{subsec:ablation}
+
+To decompose the sources of performance of the full CQL agent, we evaluate four
+configurations in a factorial design:
+
+\begin{itemize}
+  \item \textbf{A1 -- Online DDPG, Sharpe reward, no macro state.}
+        A DDPG agent trained online (rolling updates) with a Sharpe-based reward
+        and a state vector that excludes macro variables.
+        This configuration isolates the cost of online training versus offline RL.
+
+  \item \textbf{A2 -- Offline CQL, Sharpe reward, no macro state.}
+        The CQL agent with the same Sharpe-based reward but without macro
+        variables in the state.
+        Comparing A2 with A1 isolates the contribution of the offline
+        paradigm.
+
+  \item \textbf{A3 -- Offline CQL, CVaR reward, no macro state.}
+        CQL with the CVaR reward but without macro variables.
+        Comparing A3 with A2 isolates the contribution of tail-risk-aware
+        reward shaping.
+
+  \item \textbf{A4 -- Offline CQL, CVaR reward, with macro state.}
+        The full proposed model.
+        Comparing A4 with A3 isolates the incremental contribution of the
+        SELIC-regime and credit-market state variables.
+\end{itemize}
+
+This factorial design allows us to attribute performance differences to the
+offline/online paradigm, the reward function, and the macro state representation
+independently.

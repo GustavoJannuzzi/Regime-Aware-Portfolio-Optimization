@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pandoc --track-changes=all plano_claude_code_rbfin.docx -o plano_output.md)",
+      "Bash(python -c ':*)"
+    ]
+  }
+}

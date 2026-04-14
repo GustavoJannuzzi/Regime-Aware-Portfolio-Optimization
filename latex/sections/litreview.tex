@@ -1,0 +1,159 @@
+\section{Literature Review}
+\label{sec:litreview}
+
+\subsection{Classical Portfolio Optimization}
+\label{subsec:lit_classical}
+
+The foundation of quantitative portfolio management is the mean-variance framework
+introduced by \citet{Markowitz1952}, which characterizes optimal portfolios as those
+lying on the efficient frontier---the set of allocations that maximize expected return
+for a given level of variance, or equivalently minimize variance for a target return.
+Despite its theoretical elegance, mean-variance optimization is notoriously sensitive
+to estimation error in the sample mean and covariance matrix, which causes the optimal
+weights to be unstable and the out-of-sample performance to deteriorate significantly
+\citep{Merton1980}.
+
+\citet{DeMiguel2007} conduct an extensive empirical study of fourteen mean-variance
+extensions across seven datasets and find that none consistently outperforms the naive
+$1/N$ equal-weight portfolio in terms of Sharpe ratio or turnover out-of-sample.
+This result---often called the \emph{1/N puzzle}---suggests that estimation error in
+classical methods is severe enough to erode all theoretical benefits from
+optimization.
+The Minimum-Variance Portfolio (MVP), which ignores the mean and relies solely on the
+covariance structure, partially mitigates this problem and tends to outperform
+full mean-variance models, though it still underperforms simple equal-weight strategies
+in many settings \citep{Clarke2011}.
+
+Risk Parity is a more recent alternative that allocates weights inversely proportional
+to individual asset volatility contributions, so that each asset contributes equally to
+total portfolio risk \citep{Qian2011, Maillard2010}.
+Risk Parity gained practical traction after the 2008 financial crisis because its
+diversification principle is independent of return estimates.
+However, like MVP and equal-weight, Risk Parity is entirely regime-agnostic: it
+applies the same weighting logic regardless of whether the economy is tightening,
+easing, or at a neutral stance.
+In emerging markets with pronounced monetary cycles, this insensitivity to the
+macro environment is a material limitation.
+
+\subsection{Reinforcement Learning in Finance}
+\label{subsec:lit_rl_finance}
+
+The application of reinforcement learning to financial decision-making has grown
+rapidly since the introduction of deep Q-networks \citep{Mnih2015}, which demonstrated
+that neural network function approximators could learn superhuman policies directly
+from raw inputs.
+Early applications to portfolio management used Q-learning on discretized action
+spaces \citep{Moody1998a}, but the continuous nature of portfolio weights motivated a
+shift to policy-gradient and actor-critic methods.
+
+\citet{Jiang2017} propose a Convolutional Neural Network-based portfolio management
+system trained with a policy-gradient algorithm, demonstrating consistent
+outperformance over buy-and-hold and equal-weight strategies on cryptocurrency markets.
+\citet{Ye2020} apply the Proximal Policy Optimization (PPO) algorithm to U.S. equity
+portfolios and show that including technical indicators in the state space improves
+risk-adjusted returns.
+Deep Deterministic Policy Gradient (DDPG) \citep{Lillicrap2015} has been widely
+adopted for its ability to handle continuous action spaces and has been applied to
+stock trading \citep{Xiong2018}, commodity futures \citep{Liang2018}, and
+multi-asset allocation \citep{Soleymani2021}.
+Soft Actor-Critic (SAC) \citep{Haarnoja2018}, which maximizes a combination of
+expected return and entropy, has shown robustness advantages in financial settings
+due to its inherent exploration mechanism.
+
+A common thread across these studies is that they operate in an \emph{online} setting,
+where the agent simultaneously interacts with the market environment and updates its
+policy.
+This conflation of training and evaluation creates a risk of look-ahead bias,
+particularly in simulation-based studies where the environment is replayed from
+historical data and the agent can, in principle, extract information about future
+returns from the reward signal during training.
+
+\subsection{Offline Reinforcement Learning and Conservative Q-Learning}
+\label{subsec:lit_offline_rl}
+
+Offline RL---also known as batch RL---addresses the look-ahead bias problem by
+restricting training to a fixed dataset collected by a \emph{behavioral policy}
+that is separate from the policy being learned \citep{Levine2020}.
+The agent never interacts with the live environment during training, eliminating
+any possibility of exploiting future information.
+This paradigm is particularly attractive for finance, where live experimentation is
+costly and historical data is abundant.
+
+The central challenge of offline RL is the \emph{distributional shift} problem:
+Q-values for actions that are underrepresented in the offline dataset can be
+severely overestimated, leading to policies that select actions the behavioral
+policy would never take and that may perform catastrophically in deployment.
+\citet{Kumar2020} propose Conservative Q-Learning (CQL) to address this.
+CQL augments the standard Bellman loss with a regularization term that penalizes
+the expected Q-value of actions sampled from the current policy while rewarding
+the expected Q-value of actions sampled from the behavioral data.
+Formally, this conservatism penalty minimizes a lower bound on the true Q-value
+for out-of-distribution actions, preventing the agent from assigning unrealistically
+high values to unexplored regions of the action space.
+\citet{Kumar2020} demonstrate that CQL achieves state-of-the-art performance on
+the D4RL offline RL benchmark \citep{Fu2020}, outperforming prior methods including
+Behavior-Cloning, BCQ \citep{Fujimoto2019}, and BEAR \citep{Kumar2019}.
+
+In finance, offline RL has attracted growing attention.
+\citet{Yuan2025} apply an offline policy within a bilevel optimization framework
+for sequential portfolio optimization, highlighting the practical importance of
+ensuring that the offline policy does not merely memorize the optimal actions
+from the training data.
+The present paper is, to our knowledge, among the first to apply CQL specifically
+to multi-asset equity portfolio optimization in the Brazilian market, combining
+offline safety guarantees with explicit tail-risk control.
+
+\subsection{CVaR in Portfolio Optimization}
+\label{subsec:lit_cvar}
+
+Conditional Value-at-Risk (CVaR), also known as Expected Shortfall or Tail
+Value-at-Risk, was formally introduced as a coherent risk measure by
+\citet{Rockafellar2000}, who also proposed a linear-programming formulation
+that makes CVaR minimization tractable in the context of portfolio optimization.
+Unlike Value-at-Risk (VaR), which only characterizes the loss threshold at a
+given confidence level but ignores the severity of losses beyond that threshold,
+CVaR measures the expected loss conditional on exceeding the VaR threshold.
+CVaR satisfies the axioms of coherent risk measures---translation invariance,
+monotonicity, positive homogeneity, and subadditivity---making it a theoretically
+sound basis for portfolio risk control \citep{Artzner1999}.
+
+The application of CVaR to reinforcement learning reward design has received
+increasing attention in the risk-sensitive RL literature.
+\citet{Tamar2015} develop a policy-gradient algorithm for CVaR-constrained MDPs,
+proving convergence to a local optimum.
+More recently, \citet{Dabney2018} propose Distributional RL methods that learn
+the full return distribution rather than only its expectation, enabling
+quantile-based risk measures to be incorporated directly into the value function.
+In the portfolio context, a CVaR reward penalizes the agent for generating
+return distributions with heavy left tails, which is particularly relevant in
+emerging markets where political risk, currency crises, and commodity shocks
+produce return distributions with excess kurtosis and negative skewness.
+
+\subsection{Macroeconomic Regimes and Emerging Markets}
+\label{subsec:lit_macro_regimes}
+
+The literature on regime-switching models in finance dates to \citet{Hamilton1989},
+who demonstrated that U.S. GDP growth follows a two-state Markov switching process.
+Subsequent work extended regime-switching to equity returns, showing that volatility,
+correlation structure, and expected returns vary substantially across expansionary and
+recessionary regimes \citep{Ang2002}.
+In portfolio management, conditioning on regimes has been shown to improve
+risk-adjusted performance: \citet{Guidolin2007} find that mean-variance investors
+who condition on business-cycle regimes achieve economically large utility gains
+relative to unconditional allocations.
+
+The Brazilian market presents a particularly compelling case for regime-aware
+strategies.
+The SELIC rate---the primary instrument of Brazilian monetary policy---has fluctuated
+between 2\% and over 14\% during our sample period (2015--2024), with each major
+cycle coinciding with distinct equity-market dynamics.
+\citet{Sachsida2006} document that Brazilian asset prices are more responsive to
+domestic monetary shocks than to international ones, underscoring the importance of
+incorporating SELIC dynamics into portfolio models.
+Additionally, the Brazilian market is characterized by relatively high equity
+premiums, elevated credit spreads, and persistent currency volatility that amplify
+the macro-financial transmission mechanism compared with developed markets
+\citep{Bonomo2011}.
+These structural features motivate our choice to include not only SELIC regime
+indicators but also CDS spreads and implied volatility in the state vector, capturing
+the multi-dimensional nature of risk in an emerging-market context.

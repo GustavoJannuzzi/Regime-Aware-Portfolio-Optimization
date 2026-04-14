@@ -1,0 +1,34 @@
+{
+  "conservative_weight": 0.5,
+  "actor_learning_rate": 0.0003,
+  "critic_learning_rate": 0.0003,
+  "n_action_samples": 10,
+  "batch_size": 256,
+  "n_steps_final": 2000,
+  "oos_sharpe": 0.4189,
+  "oos_cvar5": 0.0252,
+  "oos_ann_ret": 0.0811,
+  "grid_results": [
+    {
+      "conservative_weight": 0.5,
+      "oos_sharpe": 0.3874,
+      "oos_cvar5": 0.0242,
+      "oos_ann_ret": 0.0713,
+      "train_time_s": 451.5
+    },
+    {
+      "conservative_weight": 1.0,
+      "oos_sharpe": 0.301,
+      "oos_cvar5": 0.0251,
+      "oos_ann_ret": 0.0567,
+      "train_time_s": 343.4
+    },
+    {
+      "conservative_weight": 2.0,
+      "oos_sharpe": 0.284,
+      "oos_cvar5": 0.0259,
+      "oos_ann_ret": 0.055,
+      "train_time_s": 370.8
+    }
+  ]
+}

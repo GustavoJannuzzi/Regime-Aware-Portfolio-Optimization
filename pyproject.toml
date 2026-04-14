@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "rbfin-offline-rl"
+version = "0.1.0"
+description = "Regime-Aware Portfolio Optimization via Offline RL with CVaR Reward"
+authors = [{ name = "Gustavo", email = "" }]
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.optional-dependencies]
+dev = ["black", "pytest", "ipykernel"]

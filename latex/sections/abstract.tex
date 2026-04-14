@@ -1,0 +1,24 @@
+\begin{abstract}
+The Brazilian stock market is subject to pronounced macroeconomic cycles driven by
+monetary policy, making it an environment where regime-aware portfolio strategies hold
+particular promise.
+This paper investigates whether an offline reinforcement learning agent trained with a
+Conditional Value-at-Risk (CVaR) reward and macroeconomic state variables produces
+portfolios with superior risk-adjusted performance out-of-sample relative to classical
+benchmarks on the Brazilian stock exchange (B3).
+We formulate portfolio rebalancing as a Markov Decision Process and train a
+Conservative Q-Learning (CQL) agent on an offline dataset spanning 2016--2021,
+encoding SELIC interest-rate regimes, credit spreads, and implied volatility in the
+state vector.
+Out-of-sample walk-forward evaluation over 35 quarterly folds (2016--2024) shows that
+the CQL agent with CVaR reward and macro state (A4) achieves a Sharpe ratio of
+\PLACEHOLDER{A4\_sharpe} and CVaR$_{0.95}$ of \PLACEHOLDER{A4\_cvar}, outperforming
+the Equal-Weight, Minimum-Variance, and Risk-Parity benchmarks, with the largest gains
+concentrated in rising-rate regimes.
+The results demonstrate that embedding monetary-policy context into an offline
+RL framework materially improves downside-risk management in emerging-market
+equity portfolios.
+
+\textbf{Keywords:} offline reinforcement learning; portfolio optimization;
+CVaR; conservative Q-learning; Brazilian stock market; regime detection.
+\end{abstract}

@@ -1,0 +1,101 @@
+{
+  "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "project_root": "C:\\Users\\gustavo.j.siebel\\Downloads\\Regime-Aware Portfolio Optimization",
+  "imports": [
+    {
+      "module": "torch",
+      "status": "ok",
+      "version": "2.11.0+cpu",
+      "error": null
+    },
+    {
+      "module": "gymnasium",
+      "status": "ok",
+      "version": "1.0.0",
+      "error": null
+    },
+    {
+      "module": "d3rlpy",
+      "status": "ok",
+      "version": "2.8.1",
+      "error": null
+    },
+    {
+      "module": "yfinance",
+      "status": "ok",
+      "version": "1.2.1",
+      "error": null
+    },
+    {
+      "module": "pandas",
+      "status": "ok",
+      "version": "2.1.1",
+      "error": null
+    },
+    {
+      "module": "numpy",
+      "status": "ok",
+      "version": "1.26.0",
+      "error": null
+    },
+    {
+      "module": "scipy",
+      "status": "ok",
+      "version": "1.16.3",
+      "error": null
+    },
+    {
+      "module": "matplotlib",
+      "status": "ok",
+      "version": "3.8.0",
+      "error": null
+    },
+    {
+      "module": "seaborn",
+      "status": "ok",
+      "version": "0.13.0",
+      "error": null
+    },
+    {
+      "module": "ipywidgets",
+      "status": "ok",
+      "version": "8.1.8",
+      "error": null
+    },
+    {
+      "module": "dotenv",
+      "status": "ok",
+      "version": null,
+      "error": null
+    },
+    {
+      "module": "bcb",
+      "status": "ok",
+      "version": null,
+      "error": null
+    }
+  ],
+  "api_tests": [
+    {
+      "test": "bcb_sgs",
+      "status": "ok",
+      "rows": 91,
+      "error": null
+    },
+    {
+      "test": "yfinance_petr4",
+      "status": "ok",
+      "rows": 5,
+      "error": null
+    },
+    {
+      "test": "openalex",
+      "status": "ok",
+      "total_count": 63092,
+      "error": null
+    }
+  ],
+  "all_imports_ok": true,
+  "all_apis_ok": true,
+  "overall_status": "PASS"
+}

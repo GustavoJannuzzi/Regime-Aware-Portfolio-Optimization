@@ -1,0 +1,108 @@
+\section{Data}
+\label{sec:data}
+
+\subsection{Asset Universe}
+\label{subsec:data_assets}
+
+The equity universe consists of ten large-cap Brazilian stocks listed on the B3
+exchange: PETR4, VALE3, ITUB4, BBDC4, ABEV3, WEGE3, RENT3, SUZB3, B3SA3, and BBAS3.
+These ten tickers were selected based on three criteria: (i)~continuous listing
+throughout the full sample period January~2015 to December~2024, (ii)~membership in
+the Ibovespa index for at least eight of the ten years, and (iii)~average daily
+traded volume exceeding R\$~100 million, ensuring that the portfolio weights implied
+by the optimization are implementable without significant market-impact costs.
+The ten assets span six sectors---energy and materials (PETR4, VALE3, SUZB3),
+financials (ITUB4, BBDC4, BBAS3, B3SA3), consumer staples (ABEV3), industrials
+(WEGE3), and services (RENT3)---providing cross-sector diversification within the
+concentrated structure of the Brazilian equity market.
+
+Daily adjusted closing prices were obtained from Yahoo Finance via the
+\texttt{yfinance} library.
+Log returns were computed as $r_{i,t} = \log(P_{i,t}/P_{i,t-1})$ for each asset~$i$
+and trading day~$t$.
+The full sample spans January~2015 to December~2024, comprising 2,487 trading days.
+Table~\ref{tab:descriptive_stats} reports summary statistics for log returns over
+the full period.
+The cross-sectional dispersion in annualized returns is substantial: WEGE3 delivers
+the highest annualized return at 23.9\%, followed by PETR4 at 26.0\%, while ABEV3
+records the lowest at 1.2\%, reflecting both sector dynamics and firm-specific factors.
+The equal-weight portfolio achieves a mean daily return of $0.000545$ (annualized:
+$\approx13.7\%$) with a daily standard deviation of $0.015521$ and a
+CVaR$_{0.95}$ of $-0.0249$.
+
+\subsection{Macroeconomic Variables}
+\label{subsec:data_macro}
+
+Three macroeconomic time series are incorporated to characterize the Brazilian
+monetary and credit environment.
+
+\textbf{SELIC rate.} The daily SELIC overnight rate (Series 11, BCB-SGS) was
+retrieved from the Banco Central do Brasil public API
+(\texttt{api.bcb.gov.br}).
+The SELIC is the primary monetary-policy instrument in Brazil and its level and
+direction are key determinants of equity valuations and credit conditions.
+
+\textbf{Credit spread.} The spread between Brazilian corporate bond yields and
+government securities was constructed as a proxy for domestic credit risk.
+This variable captures periods of financial stress that are not fully reflected
+in interest-rate levels alone.
+
+\textbf{CDS proxy.} A proxy for sovereign credit risk was constructed using
+the five-year Brazil CDS mid-quote, normalized to have zero mean and unit
+variance over rolling 252-day windows to ensure stationarity in the state vector.
+
+In addition, the Brazilian implied volatility index (IVOL-BR), when available,
+is included as a measure of market-wide uncertainty.
+All macroeconomic variables are aligned to the equity trading calendar using
+forward-fill for days on which the macroeconomic series do not report (e.g.,
+holidays on which the bond market is closed but equities trade).
+
+\subsection{SELIC Regime Classification}
+\label{subsec:data_regimes}
+
+Monetary-policy regimes are identified from the direction of the SELIC rate
+using a rule-based classification.
+A regime is labeled \emph{Rising} if the SELIC rate increased in the most recent
+Monetary Policy Committee (COPOM) meeting, \emph{Falling} if it decreased, and
+\emph{Stable} if it remained unchanged.
+This classification is strictly backward-looking---only information available at
+each date is used---so it introduces no look-ahead bias.
+Table~\ref{tab:regime_stats} summarizes the regime distribution across the
+2,487-day sample.
+
+Over the full period, the Stable regime accounts for the majority of trading days
+(42.1\%, or 1,048 days), reflecting the extended periods between rate decisions.
+The Rising regime covers 23.5\% of the sample (584 days), concentrated primarily
+in 2015--2016 and 2021--2023.
+The Falling regime accounts for the remaining 34.4\% (855 days), corresponding
+to the easing cycle of 2017--2020 and the initial phase of the 2023--2024
+normalization.
+
+The economic significance of these regimes is confirmed by the large variation in
+aggregate Sharpe ratios: the equal-weight portfolio achieves a Sharpe ratio of
+$-0.23$ during Rising-rate periods, $+0.88$ during Stable periods, and $+0.62$
+during Falling periods.
+This three-way split provides a natural test of whether a regime-aware portfolio
+strategy can exploit this heterogeneity to improve risk-adjusted performance.
+
+\subsection{Stationarity}
+\label{subsec:data_stationarity}
+
+All ten log-return series were tested for stationarity using the Augmented
+Dickey-Fuller (ADF) test.
+All ten tickers reject the unit-root null hypothesis at the 1\% significance level
+($p < 0.001$), confirming that log returns are stationary in levels.
+This is consistent with standard results in the empirical finance literature and
+validates the use of log returns as the primary input to the model without
+additional differencing.
+
+\inputtable{descriptive_stats}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{fig_selic_regimes}
+  \caption{SELIC overnight rate and identified monetary-policy regimes, 2015--2024.
+           Shaded bands indicate Rising (red), Stable (gray), and Falling (blue) rate
+           regimes classified from COPOM decisions.}
+  \label{fig:selic_regimes}
+\end{figure}

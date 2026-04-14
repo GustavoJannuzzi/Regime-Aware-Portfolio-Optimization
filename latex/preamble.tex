@@ -1,0 +1,35 @@
+% Encoding e idioma
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+
+% Matemática
+\usepackage{amsmath,amssymb,amsthm,bm}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+
+% Tabelas e figuras
+\usepackage{booktabs,longtable,multirow,rotating}
+\usepackage{graphicx,subfig}
+\graphicspath{{../outputs/figures/}}
+
+% Referências bibliográficas
+\usepackage[round,authoryear]{natbib}
+
+% Referências cruzadas e links
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink]{cleveref}
+
+% Layout
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% Input de tabelas externas
+\newcommand{\inputtable}[1]{\input{../outputs/tables/#1}}
+
+% Algoritmos
+\usepackage[ruled,vlined]{algorithm2e}
+
+% Placeholder command (replaced by fill_placeholders.py before compilation)
+\newcommand{\PLACEHOLDER}[1]{\textbf{[??#1??]}}

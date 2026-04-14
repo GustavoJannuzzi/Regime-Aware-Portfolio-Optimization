@@ -1,0 +1,28 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+d3rlpy version: 2.8.1
+Best conservative_weight from NB-06: 0.5
+Sharpe reward stats — mean: 0.00017, std: 0.01344
+
+============================================================
+NB-07 — Ablation Study A1–A4
+============================================================
+
+=== A1: CQL(a~0)+Sharpe+NoMacro ===
+2026-04-14 10:26.57 [info     ] Signatures have been automatically determined. action_signature=Signature(dtype=[dtype('float32')], shape=[(10,)]) observation_signature=Signature(dtype=[dtype('float32')], shape=[(220,)]) reward_signature=Signature(dtype=[dtype('float32')], shape=[(1,)])
+2026-04-14 10:26.57 [info     ] Action-space has been automatically determined. action_space=<ActionSpace.CONTINUOUS: 1>
+2026-04-14 10:26.57 [info     ] Action size has been automatically determined. action_size=10
+2026-04-14 10:26.57 [info     ] dataset info                   dataset_info=DatasetInfo(observation_signature=Signature(dtype=[dtype('float32')], shape=[(220,)]), action_signature=Signature(dtype=[dtype('float32')], shape=[(10,)]), reward_signature=Signature(dtype=[dtype('float32')], shape=[(1,)]), action_space=<ActionSpace.CONTINUOUS: 1>, action_size=10)
+2026-04-14 10:26.57 [debug    ] Building models...            
+2026-04-14 10:27.44 [debug    ] Models have been built.       
+2026-04-14 10:27.44 [info     ] Parameters                     params={'observation_shape': [220], 'action_size': 10, 'config': {'type': 'cql', 'params': {'batch_size': 256, 'gamma': 0.99, 'observation_scaler': {'type': 'none', 'params': {}}, 'action_scaler': {'type': 'none', 'params': {}}, 'reward_scaler': {'type': 'none', 'params': {}}, 'compile_graph': False, 'actor_learning_rate': 0.0003, 'critic_learning_rate': 0.0003, 'temp_learning_rate': 0.0001, 'alpha_learning_rate': 0.0001, 'actor_optim_factory': {'type': 'adam', 'params': {'clip_grad_norm': None, 'lr_scheduler_factory': {'type': 'none', 'params': {}}, 'betas': [0.9, 0.999], 'eps': 1e-08, 'weight_decay': 0, 'amsgrad': False}}, 'critic_optim_factory': {'type': 'adam', 'params': {'clip_grad_norm': None, 'lr_scheduler_factory': {'type': 'none', 'params': {}}, 'betas': [0.9, 0.999], 'eps': 1e-08, 'weight_decay': 0, 'amsgrad': False}}, 'temp_optim_factory': {'type': 'adam', 'params': {'clip_grad_norm': None, 'lr_scheduler_factory': {'type': 'none', 'params': {}}, 'betas': [0.9, 0.999], 'eps': 1e-08, 'weight_decay': 0, 'amsgrad': False}}, 'alpha_optim_factory': {'type': 'adam', 'params': {'clip_grad_norm': None, 'lr_scheduler_factory': {'type': 'none', 'params': {}}, 'betas': [0.9, 0.999], 'eps': 1e-08, 'weight_decay': 0, 'amsgrad': False}}, 'actor_encoder_factory': {'type': 'default', 'params': {'activation': 'relu', 'use_batch_norm': False, 'dropout_rate': None}}, 'critic_encoder_factory': {'type': 'default', 'params': {'activation': 'relu', 'use_batch_norm': False, 'dropout_rate': None}}, 'q_func_factory': {'type': 'mean', 'params': {'share_encoder': False}}, 'tau': 0.005, 'n_critics': 2, 'initial_temperature': 1.0, 'initial_alpha': 1.0, 'alpha_threshold': 10.0, 'conservative_weight': 0.001, 'n_action_samples': 10, 'soft_q_backup': False, 'max_q_backup': False}}}
+2026-04-14 10:32.12 [info     ] ablation_A1: epoch=1 step=500  epoch=1 metrics={'time_sample_batch': 0.011124213695526124, 'time_algorithm_update': 0.5205257334709168, 'critic_loss': 0.0013799106929218397, 'conservative_loss': 0.0006507303254911676, 'alpha': 1.025671732902527, 'actor_loss': -6.552152597427368, 'temp': 0.9754913880825042, 'temp_loss': 16.394870857238768, 'time_step': 0.531778238773346} step=500
+2026-04-14 10:32.36 [info     ] Model parameters are saved to d3rlpy_logs\ablation_A1\model_500.d3
+2026-04-14 10:36.28 [info     ] ablation_A1: epoch=2 step=1000 epoch=2 metrics={'time_sample_batch': 0.010205219268798828, 'time_algorithm_update': 0.4464654326438904, 'critic_loss': 0.0007456677798181773, 'conservative_loss': 0.0006246521949069575, 'alpha': 1.0781939041614532, 'actor_loss': -6.207116429328918, 'temp': 0.9288563868999481, 'temp_loss': 15.6307396068573, 'time_step': 0.4567944669723511} step=1000
+2026-04-14 10:36.34 [info     ] Model parameters are saved to d3rlpy_logs\ablation_A1\model_1000.d3
+2026-04-14 10:39.52 [info     ] ablation_A1: epoch=3 step=1500 epoch=3 metrics={'time_sample_batch': 0.008644287109375, 'time_algorithm_update': 0.3821385860443115, 'critic_loss': 9.92319708748255e-05, 'conservative_loss': -0.0001477147649275139, 'alpha': 1.1123788521289826, 'actor_loss': -5.435293618202209, 'temp': 0.8852991627454758, 'temp_loss': 14.833235164642334, 'time_step': 0.3908666071891785} step=1500
+2026-04-14 10:39.59 [info     ] Model parameters are saved to d3rlpy_logs\ablation_A1\model_1500.d3
+2026-04-14 10:43.23 [info     ] ablation_A1: epoch=4 step=2000 epoch=4 metrics={'time_sample_batch': 0.009161130905151367, 'time_algorithm_update': 0.39364976072311403, 'critic_loss': -0.002382595425704494, 'conservative_loss': -0.0032744038032833486, 'alpha': 1.0295399227142334, 'actor_loss': -3.3864146294593813, 'temp': 0.8452469285726547, 'temp_loss': 13.352998863220215, 'time_step': 0.40291293573379516} step=2000
+2026-04-14 10:43.29 [info     ] Model parameters are saved to d3rlpy_logs\ablation_A1\model_2000.d3
