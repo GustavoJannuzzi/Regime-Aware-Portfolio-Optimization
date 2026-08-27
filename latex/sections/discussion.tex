@@ -4,70 +4,163 @@
 \subsection{Economic Interpretation of the CVaR Reward}
 \label{subsec:disc_cvar}
 
-The superiority of the CVaR reward (A3, A4) over the Sharpe-based reward (A1, A2)
-in the Brazilian equity market is consistent with two well-documented structural
-features of emerging-market return distributions.
-First, Brazilian equities exhibit pronounced negative skewness and excess kurtosis
+The motivating argument for a CVaR objective is sound and we do not retract it.
+Brazilian equities exhibit pronounced negative skewness and excess kurtosis
 relative to developed-market benchmarks, driven by periodic currency crises,
 commodity price shocks, and fiscal uncertainty.
-The Sharpe ratio, by treating upside and downside deviations symmetrically, implicitly
-values a large positive outlier as much as it penalizes an equal negative one.
-The CVaR reward, by contrast, focuses exclusively on the left tail and therefore
-incentivizes the agent to avoid large drawdowns even at some cost in expected return.
-In an environment where tail events are more frequent and severe than a normal
-distribution would predict, this asymmetric objective yields portfolios that are
-more appropriate for risk-averse investors.
+The Sharpe ratio, treating upside and downside deviations symmetrically, values a
+large positive outlier as much as it penalizes an equal negative one, which is not
+how a risk-averse investor evaluates outcomes.
 
-Second, the parameter $\lambda = 0.5$ in the reward function
-(Equation~\eqref{eq:cvar_reward}) creates a meaningful tension between return
-maximization and tail-risk minimization.
-The ablation results suggest that this balance is well calibrated: the CVaR-based
-agents do not sacrifice too much expected return in pursuit of tail protection,
-as evidenced by the competitive Calmar ratios relative to pure return-maximizing
-strategies.
+The implementation tested here, however, does not deliver that objective, and the
+ablation makes the failure visible rather than hiding it.
+Moving from A2 to A3---the single change being the reward---degrades both the
+efficiency and the tail behaviour of the resulting portfolios.
+This is not the direction the motivating argument predicts, and the explanation is
+in the construction of the reward rather than in the market.
+
+Consider how the reward at date $t$ is computed (Section~\ref{subsec:mdp}).
+The portfolio return series entering the CVaR estimate is
+$\mathbf{r}_{t-T:t}^{\top}\mathbf{w}_t$ with $T = 20$: the candidate weights are
+scored against the \emph{preceding} twenty trading days.
+The state at the same date, by construction, contains the normalized returns of
+those same twenty days.
+The reward is therefore a deterministic function of the state and the action, and
+contributes no information that the agent does not already observe.
+There is no environment feedback in the usual sense: maximizing this signal is not
+a decision problem about the future but a re-scoring of data the agent has already
+seen.
+Under this objective the optimal policy is the one that minimizes the trailing
+twenty-day tail loss of the observed window, which makes the agent a rolling
+short-window tail-risk optimizer.
+A twenty-day estimate of a $95\%$ tail is built on one observation, and the
+out-of-sample behaviour of A3 is what one would expect of a portfolio rule fitted
+to that.
+
+The contrast with A1 and A2 is instructive precisely because it is structural.
+Their reward is the realized portfolio return on day $t$ under the behavioral
+action, a quantity that is absent from the state and only becomes known after the
+action is fixed.
+That is genuine feedback, and it is the configuration in which the conservatism
+penalty produces its clearest gain.
+The ablation, read this way, does not show that tail-risk-aware objectives fail in
+the Brazilian market.
+It shows that a reward which is measurable from the state alone cannot teach an
+agent anything, whatever quantity it is named after.
+
+The correction is well defined and is the first item of future work: score the
+action against the returns that follow it, estimating the tail over a forward
+window $\mathbf{r}_{t:t+T}$, or over a longer trailing window that is deliberately
+excluded from the state.
+Until that experiment is run, no claim in this paper about CVaR reward shaping
+should be carried forward, in either direction.
+Note also that $\lambda = 0.5$ was fixed a priori and never tuned; the grid search
+of Section~\ref{subsec:cql} varied only the conservative weight.
 
 \subsection{Role of Macroeconomic State Variables}
 \label{subsec:disc_macro}
 
-The incremental performance of A4 over A3 confirms that macroeconomic
-regime information is a valuable input to the portfolio allocation decision in the
-Brazilian market.
-The SELIC one-hot encoding provides the agent with a direct signal about the
-monetary policy stance that is not fully captured by the trailing return and
-volatility statistics already present in the state vector.
-During rising-rate regimes, the combination of tighter financial conditions, reduced
-earnings visibility, and elevated risk premiums creates an environment in which
-active regime conditioning adds the most value.
+Adding the macro block lifts Sharpe from 0.2111 to 0.4058 while leaving tail loss
+and drawdown worse than in either Sharpe-reward configuration.
+The gain is real in the arithmetic and difficult to attribute, for two reasons that
+compound.
 
-The CDS proxy and credit spread play a complementary role, capturing dimensions
-of credit-market stress that are correlated with but not identical to the interest-rate
-regime.
-Periods of elevated CDS spreads, for instance, can precede formal COPOM rate
-decisions, giving the agent a forward-looking signal about macro deterioration
-that the backward-looking SELIC one-hot encoding would miss until the next committee
-meeting.
+The first is the reward.
+A3 and A4 share an objective that, as argued in Section~\ref{subsec:disc_cvar},
+supplies no feedback: it is computable from the state.
+Adding five dimensions to a state under such an objective changes which
+trailing-window portfolio the optimizer settles on, and that change can raise or
+lower out-of-sample Sharpe without the new dimensions carrying information about
+the allocation decision at all.
+The comparison that would separate the two accounts, A3 against A4 under a reward
+scored on returns the agent has not yet seen, has not been run.
 
-These findings are consistent with the theoretical argument that macro-financial
-variables reduce the \emph{irreducible} component of portfolio uncertainty by
-improving the precision of the agent's beliefs about the return-generating process.
-From a practical standpoint, all three macro variables (SELIC direction, CDS proxy,
-credit spread) are observable in real time, making the A4 agent directly implementable
-without reliance on forecasts or latent state estimates.
+The second is the regime-conditional evidence, which points against the mechanism
+the hypothesis proposes.
+If the macro block were informative about tightening cycles specifically, the
+agent's advantage should concentrate in the rising-rate regime.
+It is inverted: the agent trails the naive benchmark most widely precisely there
+(0.2811 against 1.2050) and leads only while rates fall (0.4609 against
+$-0.4524$).
+That pattern is what a persistently defensive allocation produces mechanically,
+and it does not require the agent to have learned anything about monetary policy.
+A beta-matched comparison would test this directly and is not part of this study.
+
+One methodological point survives intact and is worth stating, because it is the
+part of the original argument that the data does not touch: both macro inputs are
+observable in real time and require no forecast or latent-state estimate, so an
+agent conditioned on them is implementable without a nowcasting apparatus.
+That property is a precondition for the approach, not evidence for it.
 
 \subsection{Limitations}
 \label{subsec:disc_limitations}
 
 Several limitations of this study should be acknowledged.
+The first three are, in our view, the ones that most constrain how the results
+of Section~\ref{sec:results} may be read.
 
-\textbf{Transaction costs.}
-The evaluation protocol excludes transaction costs.
-Given that the CQL agent rebalances quarterly---the same frequency as the
-benchmarks---the additional cost from deviation of agent weights from benchmark
-weights is unlikely to reverse the qualitative results, but it may reduce the
-magnitude of outperformance, particularly for institutional investors subject to
-market-impact costs on large B3 positions.
-Future work should incorporate a realistic cost model, including bid-ask spreads
-and market-impact functions.
+\textbf{No measure of uncertainty.}
+Every number reported in this paper comes from a single evaluation window and a
+single random seed.
+We provide no confidence interval on any Sharpe ratio and no test of the
+difference between any two strategies.
+With 720 trading days of out-of-sample data and a training procedure whose
+outcome depends on initialisation, differences of the magnitude reported here
+are well within the range that seed variation alone can produce in offline RL.
+The ordering of the configurations should therefore be read as a description of
+this run, not as an estimate of a population quantity.
+Repeating the ablation across seeds and reporting the dispersion is the single
+most valuable extension of this work, and it is not expensive: the whole ladder
+runs in under two hours on a laptop CPU.
+
+\textbf{Asymmetric evaluation protocols.}
+As set out in Section~\ref{subsec:walkforward}, the benchmarks re-estimate their
+weights every quarter while the agent is trained once and then frozen for three
+years.
+The comparison is not like-for-like, and the direction of the bias is against
+the agent.
+A per-fold retrained agent would settle this, and this study does not provide one.
+
+\textbf{A thin macro block.}
+The macro information available to the agent is two scalars and a three-way
+regime encoding (Section~\ref{subsec:data_macro}).
+Sovereign credit risk and implied volatility, the two variables most often cited
+as carrying emerging-market stress, are absent.
+Any conclusion about the value of ``macro conditioning'' is therefore a
+conclusion about this particular thin encoding of the policy stance, and says
+little about a richer one.
+
+\textbf{Transaction costs, and why they are decisive here.}
+The evaluation protocol excludes transaction costs, and this is the assumption
+on which the reported comparison rests.
+The agent does not rebalance quarterly.
+The evaluation applies the policy's predicted weights on every trading day, so
+the agent rebalances daily, while the benchmarks hold their weights fixed
+between quarterly re-estimations.
+Measuring one-way turnover as
+$\tau_t = \sum_i \lvert w_{i,t} - w_{i,t-1} \rvert$ by inference over the
+evaluation set gives annualised turnover of 38.5$\times$ portfolio value for
+A1 and 87.9$\times$ for A2, against approximately 1.0$\times$ for the
+Minimum-Variance Portfolio, 0.5$\times$ for Risk Parity, and zero for
+Equal-Weight, which never trades.
+
+At a round-trip cost of 10 basis points---a conservative figure for liquid B3
+names once brokerage, exchange fees, and slippage are included---this
+corresponds to roughly 3.9\% to 8.8\% per year for the agents and about
+0.1\% per year for the benchmarks.
+Annualised returns of the agents in the evaluation window are of the order of
+9\%.
+A cost differential of that size does not merely reduce the magnitude of any
+outperformance: it is of the same order as the entire return being compared.
+No conclusion in Section~\ref{sec:results} should be read as a statement about
+implementable performance, and any future version of this study must either
+constrain turnover in the reward or report results net of a cost model.
+
+A related observation concerns concentration.
+The mean maximum weight assigned by the full agent is 0.58, and on 525 of the
+748 evaluation days a single asset exceeds half of the portfolio.
+The conservatism penalty of CQL bounds the agent to actions supported by the
+behavioral data; it does not, and is not designed to, impose diversification.
 
 \textbf{No short selling.}
 The simplex constraint (Equation~\eqref{eq:action_space}) restricts the agent to
@@ -97,17 +190,26 @@ generalizability of the proposed framework.
 \subsection{Practical Implications}
 \label{subsec:disc_implications}
 
-For Brazilian fund managers, the results suggest that regime-aware portfolio
-strategies offer meaningful improvements in downside risk management during
-tightening cycles.
-The largest gains from the A4 agent are concentrated precisely in the environment
-most challenging for equity investors---rising rates---suggesting that the
-incremental cost of computing and incorporating the macro state vector is well
-justified by the reduction in tail risk during these periods.
-The quarterly rebalancing frequency is compatible with the operational constraints
-of most domestic equity funds and does not require intraday or high-frequency
-monitoring.
-The use of an offline RL framework furthermore implies that the strategy can be
-backtested and validated on historical data without the methodological concerns
-about look-ahead bias that complicate the evaluation of online RL agents, making
-it more suitable for regulatory and audit scrutiny.
+We see no basis in these results for recommending the proposed strategy to a
+Brazilian fund manager, and three findings argue specifically against it.
+The agent is dominated by an equal-weight portfolio on every metric measured; it
+rebalances daily, at a turnover that would carry costs of the same order as its
+entire return; and it concentrates more than half of the portfolio in a single
+asset on 525 of 748 evaluation days.
+Any of the three would be disqualifying on its own.
+
+What the study does offer a practitioner is narrower and, we think, more durable.
+The offline formulation itself holds up: training on a fixed historical dataset,
+with a conservatism penalty bounding the policy to actions the data supports,
+produced the single clearest improvement in the ablation and requires no market
+simulator whose realism would have to be defended to an auditor.
+That property makes the framework auditable in a way online RL in a simulated
+market is not, and it is independent of whether this particular agent works.
+
+The finding most likely to save someone else's time is the reward specification.
+An objective that can be computed from the observation is not a reward, however it
+is labelled, and in a financial MDP the mistake is easy to make: trailing-window
+risk statistics are natural quantities to optimize and natural quantities to put
+in a state vector, and putting the same window in both places is silent.
+Checking that the reward depends on data the agent has not yet observed costs
+nothing and would have caught this before the experiment ran.

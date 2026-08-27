@@ -21,8 +21,9 @@ is a concatenation of five groups of features:
         20-day window for each asset: 10 dimensions.
   \item \emph{Momentum} $m_{i,t} = \sum_{k=1}^{20} r_{i,t-k}$ for each asset:
         10 dimensions.
-  \item \emph{Macroeconomic scalars}: CDS proxy (1 dimension) and credit spread
-        (1 dimension), both normalized.
+  \item \emph{Macroeconomic scalars}: the SELIC target (1 dimension) and the
+        bank lending spread (1 dimension), each as a rolling 252-day z-score
+        (Section~\ref{subsec:data_macro}).
   \item \emph{SELIC regime one-hot encoding}: three binary indicators
         (Rising, Stable, Falling): 3 dimensions.
 \end{enumerate}
@@ -67,8 +68,22 @@ The CVaR at confidence level $\alpha$ is defined as:
 
 where $\text{VaR}_\alpha(X) = \inf\{x : F_X(x) \geq \alpha\}$ is the
 Value-at-Risk threshold and $F_X$ is the cumulative distribution function of $X$.
-Operationally, CVaR is estimated as the average of the $(1-\alpha)$ worst realized
-returns in a trailing window of $T = 20$ days.
+Operationally, CVaR is estimated as the average of the $(1-\alpha)$ worst returns
+obtained by applying the candidate weights $\mathbf{w}_t$ to the trailing window
+$\mathbf{r}_{t-T:t}$, with $T = 20$ days.
+
+This deserves emphasis, because it is a property of the implementation rather
+than of the CVaR objective in general.
+The window scored by the reward is the same window of returns that the state
+already encodes in its first 200 dimensions.
+The reward is consequently a deterministic function of the state and the action:
+it introduces no information beyond what the agent observes, and the transition
+carries no feedback about the consequence of the action taken.
+The Sharpe-based reward used in configurations A1 and A2, by contrast, is the
+realized portfolio return on day $t$ under the behavioral action, which is not
+contained in the state.
+Section~\ref{subsec:disc_cvar} returns to this asymmetry, which we regard as the
+central methodological finding of the ablation.
 
 The discount factor is set to $\gamma = 0.99$, reflecting a preference for near-term
 rewards while still valuing long-horizon portfolio performance.
@@ -127,43 +142,58 @@ cross-validation on a held-out validation fold within the training set.
 \subsection{Walk-Forward Evaluation Protocol}
 \label{subsec:walkforward}
 
-The primary evaluation methodology is a walk-forward cross-validation scheme
-that strictly avoids look-ahead bias.
-The full 2,487-day sample is partitioned into 35 overlapping folds.
-Each fold consists of a 252-trading-day training window followed by an
-immediately subsequent 63-trading-day test window, corresponding to approximately
-one year of training data and one quarter of test data.
-The windows are advanced in 63-day increments, so successive training sets overlap
-but the test windows are non-overlapping and contiguous.
+Two evaluation protocols are used in this paper, and they are not the same
+protocol applied to different strategies.
+The distinction governs how the comparison in Section~\ref{sec:results} should
+be read, so it is stated explicitly here.
 
-At each fold:
-\begin{enumerate}
-  \item The offline dataset $\mathcal{D}$ is constructed from returns, state
-        vectors, and rewards in the training window, with transitions generated
-        by the behavioral policy (MVP) applied to the training data.
-  \item The CQL agent is trained from scratch on $\mathcal{D}$ for a fixed
-        number of gradient steps.
-  \item The trained policy is deployed on the test window to generate daily
-        portfolio weights; no weight updates are made during the test window.
-  \item Performance metrics are recorded for the test window.
-\end{enumerate}
-Aggregate out-of-sample performance metrics are computed by concatenating the
-35 test windows into a single 2,205-day out-of-sample return series (2016--2024).
-This protocol guarantees that training always precedes testing in calendar time,
-preventing any form of look-ahead bias.
+\textbf{Benchmarks: rolling walk-forward.}
+The three classical strategies are evaluated with a rolling walk-forward scheme
+over the full 2,487-day sample, partitioned into 35 overlapping folds.
+Each fold consists of a 252-trading-day estimation window followed by an
+immediately subsequent 63-trading-day test window, corresponding to
+approximately one year of estimation data and one quarter of test data.
+Windows advance in 63-day increments, so successive estimation sets overlap but
+the test windows are non-overlapping and contiguous.
+Weights are re-estimated at every fold from the trailing estimation window only.
+Concatenating the 35 test windows yields a 2,205-day out-of-sample return series
+covering 2016--2024.
 
-The initial offline dataset used for Section~\ref{subsec:mdp} covers the
-six-year in-sample period 2016--2021 ($N = 1{,}485$ transitions for training,
-$N_{\text{eval}} = 748$ for validation) with the behavioral policy
-generating transitions according to the MVP allocation.
-The evaluation set (2022--2024) serves as a strict holdout for the final
-model-selection decision.
+\textbf{CQL agent: single chronological holdout.}
+The offline RL agent is \emph{not} retrained fold by fold.
+The transition dataset is split once in calendar time: transitions from
+2016-01-13 to 2021-12-30 ($N = 1{,}485$) form the offline training set
+$\mathcal{D}$, generated by the MVP behavioral policy, and transitions from
+2022-01-03 to 2024-12-27 ($N_{\text{eval}} = 748$) form a strict holdout that is
+touched neither during training nor during hyperparameter selection.
+The agent is trained once on $\mathcal{D}$ for a fixed number of gradient steps
+and then deployed frozen over the holdout; no weight update occurs after the
+calendar cutoff.
+
+Both protocols guarantee that estimation precedes evaluation in calendar time,
+so neither admits look-ahead bias.
+They are not, however, equally favourable to the strategy being measured.
+The benchmarks re-estimate their parameters every quarter and therefore adapt to
+the evaluation period as it unfolds, whereas the agent's policy is fixed at the
+end of 2021 and must generalise across three subsequent years of unseen regimes.
+Any comparison between the two is conservative with respect to the agent in this
+specific sense, and a per-fold retrained agent is the like-for-like counterpart
+that this study does not provide.
+
+All comparisons reported in Section~\ref{sec:results} are computed on the
+intersection of the two evaluation windows, that is, on the trading days for
+which the agent and the benchmarks both produce a return.
+The benchmark series ends on 2024-11-13, because the walk-forward requires a full
+63-day test window and the sample does not accommodate a further fold; the
+agent's series runs to 2024-12-27.
+Restricting to the common window removes 28 trading days from the agent's series
+and is what makes the two sets of numbers comparable at all.
 
 \subsection{Benchmark Strategies}
 \label{subsec:benchmarks}
 
-Three classical benchmark strategies are evaluated under the same walk-forward
-protocol:
+Three classical benchmark strategies are evaluated under the rolling
+walk-forward protocol described above:
 
 \textbf{Equal-Weight (EW).} Portfolio weights are fixed at $w_i = 1/N = 0.1$
 for all assets at every rebalancing date.
@@ -182,39 +212,52 @@ to total portfolio variance.
 Risk contributions are equalized iteratively using the algorithm of
 \citet{Maillard2010}.
 
-All three benchmarks are rebalanced quarterly to align with the CQL agent's
-evaluation schedule, and transaction costs are excluded from the primary analysis
+All three benchmarks are rebalanced quarterly, at the fold boundaries of the
+walk-forward, and transaction costs are excluded from the primary analysis
 to ensure comparability across methods.
 
 \subsection{Ablation Study Design}
 \label{subsec:ablation}
 
-To decompose the sources of performance of the full CQL agent, we evaluate four
-configurations in a factorial design:
+To decompose the sources of performance of the full agent, we evaluate four
+configurations that differ by exactly one component each.
+All four are trained offline, on the same transition dataset, for the same
+5{,}000 gradient steps, with the same seed; nothing but the named component
+changes between consecutive rungs.
 
 \begin{itemize}
-  \item \textbf{A1 -- Online DDPG, Sharpe reward, no macro state.}
-        A DDPG agent trained online (rolling updates) with a Sharpe-based reward
-        and a state vector that excludes macro variables.
-        This configuration isolates the cost of online training versus offline RL.
+  \item \textbf{A1 -- CQL with conservatism disabled, Sharpe reward, no macro
+        state.}
+        The conservative weight is set to $\alpha_{\text{CQL}} = 0.001$, which
+        reduces the CQL objective in Equation~\eqref{eq:cql_loss} to
+        approximately its Soft Actor-Critic component: the penalty on
+        out-of-distribution actions is present in form but not in magnitude.
+        The reward is the realised daily portfolio return of the behavioral
+        action, and the state vector excludes the five macro dimensions.
+        This is the least constrained agent in the ladder, and it stands in for
+        what an offline actor-critic without a conservatism term produces on
+        this dataset.
 
-  \item \textbf{A2 -- Offline CQL, Sharpe reward, no macro state.}
-        The CQL agent with the same Sharpe-based reward but without macro
-        variables in the state.
-        Comparing A2 with A1 isolates the contribution of the offline
-        paradigm.
+  \item \textbf{A2 -- CQL with conservatism, Sharpe reward, no macro state.}
+        Identical to A1 except that the conservative weight is set to the value
+        selected by the grid search of Section~\ref{subsec:cql}.
+        Comparing A2 with A1 isolates the contribution of the conservatism
+        penalty, not of the offline paradigm: both agents are offline.
 
-  \item \textbf{A3 -- Offline CQL, CVaR reward, no macro state.}
-        CQL with the CVaR reward but without macro variables.
-        Comparing A3 with A2 isolates the contribution of tail-risk-aware
-        reward shaping.
+  \item \textbf{A3 -- CQL with conservatism, CVaR reward, no macro state.}
+        Identical to A2 except for the reward, which becomes the CVaR-based
+        objective of Equation~\eqref{eq:cvar_reward}.
+        Comparing A3 with A2 isolates tail-risk-aware reward shaping.
 
-  \item \textbf{A4 -- Offline CQL, CVaR reward, with macro state.}
-        The full proposed model.
-        Comparing A4 with A3 isolates the incremental contribution of the
-        SELIC-regime and credit-market state variables.
+  \item \textbf{A4 -- CQL with conservatism, CVaR reward, with macro state.}
+        The full proposed model, adding the SELIC one-hot encoding, the SELIC
+        target level, and the bank lending spread to the state vector.
+        Comparing A4 with A3 isolates the incremental contribution of the macro
+        variables.
 \end{itemize}
 
-This factorial design allows us to attribute performance differences to the
-offline/online paradigm, the reward function, and the macro state representation
-independently.
+The design therefore attributes performance differences to the conservatism
+penalty, the reward function, and the macro state representation independently.
+It does \emph{not} speak to the online-versus-offline question: no online agent
+is trained in this study, and any claim about the offline paradigm would require
+one.

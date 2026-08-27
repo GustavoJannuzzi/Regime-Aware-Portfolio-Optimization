@@ -4,32 +4,52 @@
 \subsection{Main Out-of-Sample Results}
 \label{subsec:results_main}
 
-Table~\ref{tab:main_results} reports the aggregate out-of-sample performance of
-all strategies over the 35-fold walk-forward evaluation covering 2016--2024.
+Table~\ref{tab:main_results} reports out-of-sample performance for every
+strategy on the common evaluation window described in
+Section~\ref{subsec:walkforward}: the 720 trading days between 2022-01-03 and
+2024-11-13 on which the agent and all three benchmarks produce a return.
+The four agent configurations are trained under an identical protocol
+(5{,}000 gradient steps, seed 42) and differ only in the component named in
+Section~\ref{subsec:ablation}.
 The metrics reported are annualized return, Sharpe ratio, Sortino ratio,
 CVaR$_{0.95}$ (defined as the average loss in the worst 5\% of daily return
 observations, reported as a positive number for clarity), maximum drawdown (MaxDD),
 and Calmar ratio (annualized return divided by absolute maximum drawdown).
+Every figure comes from a single evaluation window and a single seed and carries
+no interval estimate; Section~\ref{subsec:disc_limitations} sets out what that
+precludes.
 
 Among the three classical benchmarks, Equal-Weight delivers the highest Sharpe
-ratio (0.7692) and annualized return (18.99\%), confirming the $1/N$ puzzle
+ratio (0.6076) and annualized return (10.34\%), confirming the $1/N$ puzzle
 documented by \citet{DeMiguel2007} in the context of B3 equities.
-The Minimum-Variance Portfolio achieves the lowest CVaR (0.0299) and smallest
-maximum drawdown ($-44.41\%$) but at the cost of markedly lower returns (7.79\%
-annualized), yielding a Sharpe ratio of only 0.3692.
-Risk Parity occupies an intermediate position, with a Sharpe ratio of 0.4664
-and an annualized return of 9.89\%.
+The Minimum-Variance Portfolio achieves the lowest CVaR$_{0.95}$ (0.0198) and the
+smallest maximum drawdown ($-18.22\%$) but at the cost of markedly lower returns
+(5.16\% annualized), yielding a Sharpe ratio of 0.3400.
+Risk Parity occupies an intermediate position, with a Sharpe ratio of 0.5561 and
+an annualized return of 8.94\%.
 
-The full CQL agent (configuration A4) achieves a Sharpe ratio of
-\PLACEHOLDER{A4\_sharpe} and an annualized return of \PLACEHOLDER{A4\_ann\_ret},
-with a CVaR$_{0.95}$ of \PLACEHOLDER{A4\_cvar} and a maximum drawdown of
-\PLACEHOLDER{A4\_maxdd}.
-This represents a Sharpe improvement of \PLACEHOLDER{A4\_sharpe\_diff} over the
-Equal-Weight benchmark and \PLACEHOLDER{A4\_sharpe\_vs\_mvp} over MVP, the
-strategy used to generate the behavioral data.
-The Calmar ratio of A4 (\PLACEHOLDER{A4\_calmar}) exceeds that of all three
-benchmarks, indicating that the superior risk-adjusted return is not achieved
-by accepting larger drawdowns.
+The full CQL agent (configuration A4) achieves a Sharpe ratio of 0.4058 and an
+annualized return of 7.88\%, with a CVaR$_{0.95}$ of 0.0260 and a maximum
+drawdown of $-27.22\%$.
+This is $-0.2018$ in Sharpe relative to Equal-Weight and $+0.0657$ relative to
+MVP, the strategy that generated the behavioral data.
+Equal-Weight dominates A4 on every metric in Table~\ref{tab:main_results}:
+higher return, higher Sharpe, higher Sortino, lower tail loss, shallower drawdown
+and higher Calmar.
+Risk Parity likewise dominates it.
+Against MVP the picture is mixed rather than favourable: A4 earns more and has a
+higher Sharpe, but its tail loss is a third larger (0.0260 against 0.0198) and its
+drawdown half again as deep.
+
+Two features of the table deserve to be stated plainly, because the rest of this
+section is an attempt to account for them.
+First, the proposed configuration is not the best agent in its own ablation: A2,
+which uses neither the CVaR reward nor the macro state, attains a Sharpe of 0.4464
+against A4's 0.4058.
+Second, CVaR$_{0.95}$ increases monotonically as the CVaR reward is introduced and
+then extended: 0.0222 for A1, 0.0221 for A2, 0.0241 for A3 and 0.0260 for A4.
+The two configurations that optimize a tail-risk objective have the worst realised
+tail loss of the seven strategies compared.
 
 \inputtable{main_results}
 
@@ -56,30 +76,31 @@ by accepting larger drawdowns.
 We divide the out-of-sample period into three sub-periods to assess performance
 stability across distinct macroeconomic regimes:
 
-\textbf{2022 tightening phase (Q1--Q4 2022).}
+\textbf{2022 tightening phase.}
 This period corresponds to the most aggressive phase of the SELIC hiking cycle,
 during which the rate rose from 9.25\% to 13.75\%.
-Brazilian equities experienced heightened volatility and a sustained drawdown.
-The CQL A4 agent demonstrates superior downside protection during this sub-period,
-with a CVaR of \PLACEHOLDER{A4\_cvar\_2022} compared to \PLACEHOLDER{EW\_cvar\_2022}
-for Equal-Weight, reflecting the agent's ability to reduce exposure to high-risk
-assets as the macro state signals a deteriorating environment.
+The agent does not provide downside protection here.
+A4 returns $-1.94\%$ annualized with a Sharpe of $-0.086$ and a
+CVaR$_{0.95}$ of 0.0297, against $+11.89\%$, 0.573 and 0.0265 for Equal-Weight.
+This is the sub-period in which the motivating hypothesis predicted the clearest
+advantage, and it is the sub-period in which the agent performs worst in both
+return and tail loss.
 
-\textbf{2023 peak rate period (Q1--Q3 2023).}
-With the SELIC at its ceiling of 13.75\%, credit spreads remained elevated and
-market volatility was persistent.
-A4 generates a Sharpe ratio of \PLACEHOLDER{A4\_sharpe\_2023} during this window,
-compared to \PLACEHOLDER{EW\_sharpe\_2023} for Equal-Weight, demonstrating that
-the regime-aware allocation---tilting toward lower-beta, higher-quality
-stocks---is more effective at preserving capital at peak rates.
+\textbf{2023 peak rate period.}
+With the SELIC at its ceiling of 13.75\%, A4 generates a Sharpe of 0.8374 against
+1.3501 for Equal-Weight, and a larger tail loss (0.0243 against 0.0200).
+The agent is profitable in absolute terms and still behind the naive benchmark.
 
-\textbf{2024 easing phase (Q4 2023--Q4 2024).}
-As the Banco Central do Brasil initiated rate cuts beginning in August 2023, risk
-appetite recovered and value cyclicals outperformed.
-A4 captures this rotation, achieving an annualized return of
-\PLACEHOLDER{A4\_ret\_2024} during the easing sub-period, close to the Equal-Weight
-benchmark, indicating that the conservatism of the CVaR reward does not
-materially suppress upside capture in benign environments.
+\textbf{2024 easing phase.}
+This is the one sub-period in which A4 wins, and it wins decisively: 9.50\%
+annualized with a Sharpe of 0.633, against $-5.05\%$ and $-0.424$ for
+Equal-Weight.
+Taken together with the two preceding sub-periods, the pattern is not one of
+regime intelligence but of persistent defensive positioning: the agent gives up
+return when equities rise and preserves capital when they fall.
+A lower-beta portfolio would produce the same three-period signature without any
+learning at all, and this study does not include the beta-matched comparison that
+would separate the two explanations.
 
 \subsection{Regime-Conditional Performance}
 \label{subsec:results_regime}
@@ -89,21 +110,27 @@ performance specifically during adverse monetary-policy environments.
 To test this, we compute performance metrics conditional on the SELIC regime
 label at each trading day.
 
-Table~\ref{tab:regime_conditional} reports Sharpe ratios and CVaR by regime for
-all strategies.
-The most striking pattern is in the Rising-rate regime: the Equal-Weight benchmark
-achieves a Sharpe ratio of $-0.23$ during these 584 days, while A4 achieves
-\PLACEHOLDER{A4\_sharpe\_rising}.
-This gain is the largest across the three regimes, consistent with the hypothesis
-that the macro state variables---particularly the SELIC one-hot encoding and
-CDS proxy---provide the agent with actionable information during tightening cycles.
+Table~\ref{tab:regime_conditional} reports Sharpe ratios and CVaR by regime.
+The hypothesis is not supported, and the ordering it predicts is reversed.
 
-In the Stable regime (1,048 days), A4 achieves a Sharpe of
-\PLACEHOLDER{A4\_sharpe\_stable}, comparable to Equal-Weight's 0.88, suggesting
-that macro state information is less informative when the monetary stance is
-unchanged but the agent does not sacrifice performance to gain regime sensitivity.
-In the Falling regime, performance is broadly comparable across strategies, as
-the accommodative environment reduces the dispersion in outcomes.
+In the Rising-rate regime, A4 achieves a Sharpe of 0.2811 against 1.2050 for
+Equal-Weight: the tightening phase is where the agent trails the naive benchmark
+by the widest margin, not the narrowest.
+In the Stable regime the gap narrows but persists, 0.4929 against 0.7318.
+In the Falling regime the ranking inverts: A4 achieves 0.4609 while Equal-Weight
+returns $-0.4524$ and MVP $-0.2184$, making the agent the only strategy of the
+three with a positive Sharpe while rates come down.
+
+Note that the sign of the market's own regime-conditional performance differs
+between the full sample and the evaluation window.
+Over 2015--2024 the equal-weight portfolio earns an annualized Sharpe of $-0.23$
+in rising-rate phases (Table~\ref{tab:regime_stats}), which is the empirical
+regularity that motivated conditioning on the cycle in the first place.
+Within the 2022--2024 evaluation window that regularity does not hold: equities
+rose through the tightening phase and fell through the easing phase.
+An agent whose training data encodes the historical association therefore
+inherits a mapping that the test period does not honour, and the regime-conditional
+results are as much a statement about that instability as about the agent.
 
 \inputtable{regime_conditional}
 
@@ -128,34 +155,53 @@ the accommodative environment reduces the dispersion in outcomes.
 \subsection{Ablation Study}
 \label{subsec:results_ablation}
 
-Table~\ref{tab:ablation_results} reports results for the four ablation
-configurations A1--A4.
-The progressive improvement from A1 to A4 confirms that each component of the
-proposed framework contributes incrementally to out-of-sample performance.
+Table~\ref{tab:ablation_results} reports the four configurations A1--A4.
+Performance does not improve monotonically along the ladder, and the two
+components the paper set out to defend are the two that cost performance.
 
-\textbf{A1 vs.\ A2 (online vs.\ offline).}
-The offline CQL agent (A2) outperforms the online DDPG agent (A1) with a Sharpe
-of \PLACEHOLDER{A2\_sharpe} versus \PLACEHOLDER{A1\_sharpe}, demonstrating that
-eliminating look-ahead bias by training on a fixed offline dataset improves
-the reliability of reported performance.
-The online agent's apparently competitive in-sample metrics do not generalize,
-confirming the known overfitting tendency of online RL in financial simulations.
+\textbf{A1 vs.\ A2: the conservatism penalty.}
+Raising the conservative weight from $0.001$ to the value selected by grid search
+lifts Sharpe from 0.1557 to 0.4464, leaves tail loss essentially unchanged
+(0.0222 to 0.0221) and increases maximum drawdown modestly ($-23.14\%$ to
+$-25.49\%$ before rounding).
+This is the largest single gain in the study and the only component that survives
+the ablation.
+It is also the result most consistent with the offline RL literature: penalising
+value estimates for actions absent from the behavioral data is what keeps an
+offline agent from extrapolating into regions the dataset cannot support.
+Note that this comparison says nothing about online versus offline training.
+Both configurations are offline; only the penalty differs.
 
-\textbf{A2 vs.\ A3 (Sharpe vs.\ CVaR reward).}
-Replacing the Sharpe-based reward with the CVaR reward improves the Sharpe ratio
-from \PLACEHOLDER{A2\_sharpe} to \PLACEHOLDER{A3\_sharpe} while reducing
-CVaR$_{0.95}$ from \PLACEHOLDER{A2\_cvar} to \PLACEHOLDER{A3\_cvar}.
-This result confirms that optimizing for tail risk rather than symmetric
-variance produces portfolios that are both safer and, in this sample, more
-efficient on a mean-variance basis.
+\textbf{A2 vs.\ A3: the CVaR reward.}
+Replacing the realised-return reward with the CVaR objective lowers Sharpe from
+0.4464 to 0.2111 and raises CVaR$_{0.95}$ from 0.0221 to 0.0241.
+The reward intended to control tail risk makes tail risk worse.
+Section~\ref{subsec:disc_cvar} argues that this follows from how the signal is
+constructed rather than from any property of the market: the reward scores
+candidate weights against the same twenty-day window the state already encodes,
+so it carries no information the agent does not already hold and provides no
+feedback about the consequences of the action.
 
-\textbf{A3 vs.\ A4 (without vs.\ with macro state).}
-Adding the SELIC regime indicators, CDS proxy, and credit spread to the state
-vector improves Sharpe from \PLACEHOLDER{A3\_sharpe} to \PLACEHOLDER{A4\_sharpe}
-and reduces CVaR from \PLACEHOLDER{A3\_cvar} to \PLACEHOLDER{A4\_cvar}.
-The incremental gain is concentrated in the Rising-regime sub-period, confirming
-that the macro variables are specifically informative for tightening-cycle
-risk management rather than contributing noise during neutral environments.
+\textbf{A3 vs.\ A4: the macro state.}
+Adding the SELIC target, the lending spread and the regime encoding lifts Sharpe
+from 0.2111 to 0.4058 while raising CVaR$_{0.95}$ further, from 0.0241 to 0.0260,
+and deepening maximum drawdown to $-27.22\%$.
+The macro block recovers roughly four fifths of the Sharpe lost to the reward
+change without recovering any of the tail deterioration.
+Two readings are available and the data does not separate them.
+The macro variables may carry genuine information about the allocation decision;
+or, because the reward supplies no feedback, the additional state dimensions may
+simply be changing which trailing-window portfolio the agent converges to.
+Establishing the first reading requires re-running A3 and A4 under a reward that
+is not measurable from the state, which is the experiment
+Section~\ref{subsec:disc_cvar} identifies as necessary.
+
+\textbf{The ladder as a whole.}
+The best agent in the study is A2, not the proposed A4, and A2 uses neither of the
+two components this paper contributes.
+Every agent configuration is below Equal-Weight and below Risk Parity on Sharpe.
+The honest summary is that of the three ingredients tested, one helps, one hurts,
+and the third cannot be interpreted until the second is fixed.
 
 \inputtable{ablation_results}
 

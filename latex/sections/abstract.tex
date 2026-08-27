@@ -2,22 +2,36 @@
 The Brazilian stock market is subject to pronounced macroeconomic cycles driven by
 monetary policy, making it an environment where regime-aware portfolio strategies hold
 particular promise.
-This paper investigates whether an offline reinforcement learning agent trained with a
+This paper asks whether an offline reinforcement learning agent trained with a
 Conditional Value-at-Risk (CVaR) reward and macroeconomic state variables produces
 portfolios with superior risk-adjusted performance out-of-sample relative to classical
 benchmarks on the Brazilian stock exchange (B3).
-We formulate portfolio rebalancing as a Markov Decision Process and train a
-Conservative Q-Learning (CQL) agent on an offline dataset spanning 2016--2021,
-encoding SELIC interest-rate regimes, credit spreads, and implied volatility in the
-state vector.
-Out-of-sample walk-forward evaluation over 35 quarterly folds (2016--2024) shows that
-the CQL agent with CVaR reward and macro state (A4) achieves a Sharpe ratio of
-\PLACEHOLDER{A4\_sharpe} and CVaR$_{0.95}$ of \PLACEHOLDER{A4\_cvar}, outperforming
-the Equal-Weight, Minimum-Variance, and Risk-Parity benchmarks, with the largest gains
-concentrated in rising-rate regimes.
-The results demonstrate that embedding monetary-policy context into an offline
-RL framework materially improves downside-risk management in emerging-market
-equity portfolios.
+We formulate portfolio rebalancing as a Markov Decision Process, train a
+Conservative Q-Learning (CQL) agent on an offline dataset spanning 2016--2021 whose
+state encodes SELIC regime indicators alongside asset-level return dynamics, and
+evaluate it on a held-out window from 2022 to 2024 against Equal-Weight,
+Minimum-Variance and Risk-Parity portfolios measured on the same 720 trading days.
+
+The answer is negative, and the ablation localizes why.
+The full proposed configuration attains a Sharpe ratio of 0.4058 and
+CVaR$_{0.95}$ of 0.0260 against 0.6076 and 0.0226 for the equal-weight portfolio,
+which dominates it on every metric reported.
+Decomposing the model one component at a time, the CQL conservatism penalty
+contributes $+0.29$ in Sharpe and is the only component that helps; the CVaR reward
+costs $-0.24$ and, contrary to its purpose, worsens realised tail loss at every step
+where it is active; the macro state recovers $+0.20$ but leaves the full model below
+the simpler Sharpe-reward configuration that omits both.
+We trace the reward failure to its construction rather than to the market: the CVaR
+signal scores candidate weights against the same twenty-day window the state already
+encodes, making it a deterministic function of the observation and therefore no
+feedback at all.
+Regime-conditional results invert the motivating hypothesis, with the agent's relative
+performance worst in tightening phases and positive only while rates fall.
+Measured turnover of 38 to 88 times portfolio value per year, against roughly one for
+the benchmarks, places plausible transaction costs at the same order of magnitude as
+the entire return under comparison.
+We report the $1/N$ puzzle as holding in this setting and identify the reward
+specification, not the offline paradigm, as the component requiring redesign.
 
 \textbf{Keywords:} offline reinforcement learning; portfolio optimization;
 CVaR; conservative Q-learning; Brazilian stock market; regime detection.

@@ -33,40 +33,60 @@ CVaR$_{0.95}$ of $-0.0249$.
 \subsection{Macroeconomic Variables}
 \label{subsec:data_macro}
 
-Three macroeconomic time series are incorporated to characterize the Brazilian
-monetary and credit environment.
+Two macroeconomic series enter the state vector, both retrieved from the Banco
+Central do Brasil public time-series API (SGS, \texttt{api.bcb.gov.br}).
+A third series, IPCA inflation (SGS~433), is collected and stored but is not used
+by any model reported here.
 
-\textbf{SELIC rate.} The daily SELIC overnight rate (Series 11, BCB-SGS) was
-retrieved from the Banco Central do Brasil public API
-(\texttt{api.bcb.gov.br}).
-The SELIC is the primary monetary-policy instrument in Brazil and its level and
-direction are key determinants of equity valuations and credit conditions.
+\textbf{SELIC target rate (SGS~432).}
+The policy rate set by the Monetary Policy Committee (COPOM), in percent per
+annum.
+This is the target rate rather than the realised overnight rate (SGS~11): the
+target is the instrument the committee actually decides on, is piecewise constant
+between meetings, and therefore gives an unambiguous reading of the policy stance
+on any given day.
+It enters the state vector as a rolling 252-day z-score, which removes the level
+drift and leaves the variable comparable across the sample.
 
-\textbf{Credit spread.} The spread between Brazilian corporate bond yields and
-government securities was constructed as a proxy for domestic credit risk.
-This variable captures periods of financial stress that are not fully reflected
-in interest-rate levels alone.
+\textbf{Bank lending spread (SGS~20786).}
+The average spread on non-earmarked credit operations to households, in
+percentage points, that is, the difference between the average rate charged by
+banks on such operations and their cost of funding.
+It enters the state vector as a rolling 252-day z-score.
+This is a domestic bank-credit measure, not a corporate-bond-versus-government
+spread, and it captures tightening in the transmission of monetary policy to
+household credit rather than sovereign or corporate default risk.
 
-\textbf{CDS proxy.} A proxy for sovereign credit risk was constructed using
-the five-year Brazil CDS mid-quote, normalized to have zero mean and unit
-variance over rolling 252-day windows to ensure stationarity in the state vector.
+We note explicitly what is \emph{not} in the state vector, because both are
+natural candidates that a reader may expect: there is no sovereign CDS series and
+no implied-volatility index.
+Neither was available to this study at daily frequency over the full sample
+without a paid data subscription, and no proxy for either is used.
+The macro block of the state vector is therefore two scalars plus the regime
+encoding of Section~\ref{subsec:data_regimes}, and any claim this paper makes
+about ``macro conditioning'' refers to that and nothing more.
 
-In addition, the Brazilian implied volatility index (IVOL-BR), when available,
-is included as a measure of market-wide uncertainty.
-All macroeconomic variables are aligned to the equity trading calendar using
-forward-fill for days on which the macroeconomic series do not report (e.g.,
-holidays on which the bond market is closed but equities trade).
+Both series are aligned to the equity trading calendar by forward fill, since
+neither reports on every trading day.
 
 \subsection{SELIC Regime Classification}
 \label{subsec:data_regimes}
 
-Monetary-policy regimes are identified from the direction of the SELIC rate
-using a rule-based classification.
-A regime is labeled \emph{Rising} if the SELIC rate increased in the most recent
-Monetary Policy Committee (COPOM) meeting, \emph{Falling} if it decreased, and
-\emph{Stable} if it remained unchanged.
-This classification is strictly backward-looking---only information available at
-each date is used---so it introduces no look-ahead bias.
+Monetary-policy regimes are identified from the direction of the SELIC target
+using a rule-based classification over a trailing quarter.
+Let $\Delta_{63}(t)$ be the change in the SELIC target over the previous 63
+trading days.
+The regime at date $t$ is labeled \emph{Rising} if
+$\Delta_{63}(t) > +0.25$ percentage points, \emph{Falling} if
+$\Delta_{63}(t) < -0.25$, and \emph{Stable} otherwise.
+The quarter-long window rather than the single most recent COPOM decision is
+deliberate: the committee meets eight times a year and often moves in a sequence
+of same-signed steps, so a one-meeting rule would flip the label during pauses
+inside an otherwise continuous cycle.
+The $\pm 0.25$ threshold is one standard policy increment, which keeps a single
+minimum-size move from being read as a change of regime.
+The classification is strictly backward-looking---only information available at
+each date enters it---so it introduces no look-ahead bias.
 Table~\ref{tab:regime_stats} summarizes the regime distribution across the
 2,487-day sample.
 
@@ -97,6 +117,8 @@ validates the use of log returns as the primary input to the model without
 additional differencing.
 
 \inputtable{descriptive_stats}
+
+\inputtable{regime_stats}
 
 \begin{figure}[htbp]
   \centering

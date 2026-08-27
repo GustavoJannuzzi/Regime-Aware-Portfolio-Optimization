@@ -54,10 +54,11 @@ Our specific contributions are as follows:
 \begin{enumerate}
   \item \textbf{Regime-aware state representation.}
         We construct a 225-dimensional state vector that combines asset-level
-        return statistics with macroeconomic variables---SELIC regime indicators
-        (one-hot encoded as rising, stable, or falling), CDS spreads, credit
-        spreads, and Brazilian implied volatility---enabling the agent to condition
-        portfolio decisions on the prevailing monetary-policy environment.
+        return statistics with three macro-financial inputs: the SELIC target
+        rate, the average bank lending spread to households, and a one-hot
+        encoding of the SELIC regime as rising, stable, or falling.
+        The encoding lets the agent condition portfolio decisions on the
+        prevailing monetary-policy stance rather than on price history alone.
 
   \item \textbf{CVaR reward function.}
         We replace the standard Sharpe-based reward with a composite signal that
@@ -69,9 +70,12 @@ Our specific contributions are as follows:
         observed in emerging markets.
 
   \item \textbf{Rigorous out-of-sample evaluation.}
-        We employ a strict walk-forward protocol with 35 quarterly folds, training
-        on 252-day windows and evaluating on 63-day windows, ensuring zero
-        look-ahead bias.
+        The classical benchmarks are evaluated under a rolling walk-forward
+        protocol with 35 quarterly folds, re-estimating weights on 252-day
+        windows and measuring on the following 63 days; the offline agent is
+        trained once on 2016--2021 and deployed frozen over a 2022--2024 holdout.
+        Neither protocol admits look-ahead bias, and Section~\ref{sec:methodology}
+        is explicit about the asymmetry between them.
         We benchmark the CQL agent against Equal-Weight, Minimum-Variance, and
         Risk-Parity portfolios and conduct an ablation study that isolates the
         contributions of the offline paradigm, the CVaR reward, and the macro
