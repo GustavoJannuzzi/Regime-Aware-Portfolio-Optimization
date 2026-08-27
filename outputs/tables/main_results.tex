@@ -1,0 +1,17 @@
+\begin{table}
+\caption{Out-of-sample performance of all strategies, common evaluation window 2022-01-03 to 2024-11-13 (720 trading days). All configurations are trained under the identical protocol (5{,}000 gradient steps, seed 42). A4 is the full proposal (CQL + CVaR + macro state).}
+\label{tab:main_results}
+\begin{tabular}{lrrrrrrr}
+\toprule
+ & Ann.Return & Ann.Vol & Sharpe & Sortino & CVaR$_{0.95}$ & MaxDD & Calmar \\
+\midrule
+A1 (Unconstrained+Sharpe) & 0.0262 & 0.1683 & 0.1557 & 0.2511 & 0.0222 & -0.2314 & 0.1132 \\
+A2 (CQL+Sharpe) & 0.0802 & 0.1796 & 0.4464 & 0.7784 & 0.0221 & -0.2491 & 0.3218 \\
+A3 (CQL+CVaR) & 0.0391 & 0.1851 & 0.2111 & 0.3500 & 0.0241 & -0.2606 & 0.1500 \\
+A4 (CQL+CVaR+Macro) & 0.0788 & 0.1942 & 0.4058 & 0.6482 & 0.0260 & -0.2722 & 0.2896 \\
+1/N & 0.1034 & 0.1701 & 0.6076 & 0.9808 & 0.0226 & -0.1782 & 0.5800 \\
+Min. Variance & 0.0516 & 0.1516 & 0.3400 & 0.5545 & 0.0198 & -0.1822 & 0.2829 \\
+Risk Parity & 0.0894 & 0.1607 & 0.5561 & 0.9013 & 0.0211 & -0.1806 & 0.4950 \\
+\bottomrule
+\end{tabular}
+\end{table}

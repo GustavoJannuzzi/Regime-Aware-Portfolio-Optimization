@@ -1,0 +1,41 @@
+{
+  "cost_per_turnover": 0.001,
+  "agents": {
+    "A1": {
+      "days": 748,
+      "daily_turnover_mean": 0.1526,
+      "daily_turnover_max": 0.3752,
+      "annualized_turnover": 38.45,
+      "annual_cost_estimate": 0.0385,
+      "mean_max_weight": 0.4385,
+      "days_above_50pct": 20
+    },
+    "A2": {
+      "days": 748,
+      "daily_turnover_mean": 0.3487,
+      "daily_turnover_max": 1.3021,
+      "annualized_turnover": 87.88,
+      "annual_cost_estimate": 0.0879,
+      "mean_max_weight": 0.4786,
+      "days_above_50pct": 332
+    },
+    "A3": {
+      "days": 748,
+      "daily_turnover_mean": 0.3184,
+      "daily_turnover_max": 1.1989,
+      "annualized_turnover": 80.23,
+      "annual_cost_estimate": 0.0802,
+      "mean_max_weight": 0.5014,
+      "days_above_50pct": 361
+    },
+    "A4_tuning_run": {
+      "days": 748,
+      "daily_turnover_mean": 0.2434,
+      "daily_turnover_max": 1.1355,
+      "annualized_turnover": 61.32,
+      "annual_cost_estimate": 0.0613,
+      "mean_max_weight": 0.5778,
+      "days_above_50pct": 525
+    }
+  }
+}

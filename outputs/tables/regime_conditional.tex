@@ -1,0 +1,23 @@
+\begin{table}
+\caption{Regime-conditional performance by SELIC cycle phase.}
+\label{tab:regime_conditional}
+\begin{tabular}{llrrr}
+\toprule
+ &  & Sharpe & CVaR$_{0.95}$ & Ann.Return \\
+Regime & Strategy &  &  &  \\
+\midrule
+\multirow[t]{3}{*}{Falling} & A4 (CQL+CVaR+Macro) & 0.4609 & 0.0215 & 0.0751 \\
+ & 1/N & -0.4524 & 0.0155 & -0.0599 \\
+ & Min. Variance & -0.2184 & 0.0167 & -0.0261 \\
+\cline{1-5}
+\multirow[t]{3}{*}{Stable} & A4 (CQL+CVaR+Macro) & 0.4929 & 0.0249 & 0.0928 \\
+ & 1/N & 0.7318 & 0.0236 & 0.1264 \\
+ & Min. Variance & 0.7000 & 0.0191 & 0.1001 \\
+\cline{1-5}
+\multirow[t]{3}{*}{Rising} & A4 (CQL+CVaR+Macro) & 0.2811 & 0.0290 & 0.0641 \\
+ & 1/N & 1.2050 & 0.0244 & 0.2385 \\
+ & Min. Variance & 0.3537 & 0.0222 & 0.0663 \\
+\cline{1-5}
+\bottomrule
+\end{tabular}
+\end{table}

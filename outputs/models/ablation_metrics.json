@@ -1,0 +1,65 @@
+{
+  "A1": {
+    "ann_return": 0.023967,
+    "ann_vol": 0.168004,
+    "sharpe": 0.142655,
+    "sortino": 0.228715,
+    "cvar_95": 0.022307,
+    "max_dd": -0.231394,
+    "calmar": 0.103575
+  },
+  "A2": {
+    "ann_return": 0.071146,
+    "ann_vol": 0.179793,
+    "sharpe": 0.395709,
+    "sortino": 0.679877,
+    "cvar_95": 0.022391,
+    "max_dd": -0.249122,
+    "calmar": 0.285586
+  },
+  "A3": {
+    "ann_return": 0.034693,
+    "ann_vol": 0.184774,
+    "sharpe": 0.187758,
+    "sortino": 0.30909,
+    "cvar_95": 0.024168,
+    "max_dd": -0.260595,
+    "calmar": 0.133129
+  },
+  "A4": {
+    "ann_return": 0.067132,
+    "ann_vol": 0.193584,
+    "sharpe": 0.346786,
+    "sortino": 0.552843,
+    "cvar_95": 0.025976,
+    "max_dd": -0.272189,
+    "calmar": 0.246638
+  },
+  "EqualWeight": {
+    "ann_return": 0.103365,
+    "ann_vol": 0.170134,
+    "sharpe": 0.607552,
+    "sortino": 0.980777,
+    "cvar_95": 0.022629,
+    "max_dd": -0.178209,
+    "calmar": 0.580022
+  },
+  "MVP": {
+    "ann_return": 0.051559,
+    "ann_vol": 0.151625,
+    "sharpe": 0.340041,
+    "sortino": 0.55452,
+    "cvar_95": 0.019836,
+    "max_dd": -0.182218,
+    "calmar": 0.28295
+  },
+  "RiskParity": {
+    "ann_return": 0.089378,
+    "ann_vol": 0.160736,
+    "sharpe": 0.556052,
+    "sortino": 0.901321,
+    "cvar_95": 0.021089,
+    "max_dd": -0.180576,
+    "calmar": 0.494961
+  }
+}
