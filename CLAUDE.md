@@ -95,12 +95,19 @@ rbfin-offline-rl/
 ```
 
 ## ABLATION STUDY — Configurações A1-A4
-| Config | Paradigma  | Reward | Macro |
-|--------|-----------|--------|-------|
-| A1     | DDPG online | Sharpe | Não   |
-| A2     | CQL offline | Sharpe | Não   |
-| A3     | CQL offline | CVaR   | Não   |
-| A4     | CQL offline | CVaR   | Sim   |
+Todas offline, mesmo dataset, mesmos 5.000 steps, mesma seed. Muda uma peça por
+degrau. **A1 não é DDPG online** — isso estava errado no plano original e no
+texto do artigo: `run_nb07.py` instancia CQL com `conservative_weight=0.001`,
+ou seja, offline com o termo conservador praticamente desligado. O degrau
+A1→A2 isola o **conservadorismo**, não online contra offline. Nenhum agente
+online foi treinado neste estudo.
+
+| Config | Conservadorismo CQL | Reward | Macro |
+|--------|--------------------|--------|-------|
+| A1     | ~0 (0.001)         | Sharpe | Não   |
+| A2     | grid search        | Sharpe | Não   |
+| A3     | grid search        | CVaR   | Não   |
+| A4     | grid search        | CVaR   | Sim   |
 
 ## VETOR DE ESTADO (NB-05)
 - Retornos normalizados (janela T=20)
