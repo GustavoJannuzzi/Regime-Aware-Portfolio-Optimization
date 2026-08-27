@@ -1,8 +1,8 @@
 """
 NB-07: Ablation Study A1–A4
 ============================
-A1: CQL conservative_weight≈0 + Sharpe reward + no macro  (≈DDPG/unconstrained)
-A2: CQL best_cw           + Sharpe reward + no macro  (isolates offline paradigm)
+A1: CQL conservative_weight≈0 + Sharpe reward + no macro  (offline, sem conservadorismo)
+A2: CQL best_cw           + Sharpe reward + no macro  (isolates the CQL conservatism penalty)
 A3: CQL best_cw           + CVaR reward   + no macro  (isolates reward)
 A4: CQL best_cw           + CVaR reward   + full macro (full proposal)
 
@@ -173,11 +173,14 @@ for name, cfg in configs.items():
     }
     ablation_returns[name] = result["port_returns"]
 
-    # save individual models (A1–A3; A4 already saved as cql_best)
-    if name != "A4":
-        save_path = ROOT / "outputs" / "models" / f"cql_{name.lower()}.d3"
-        cql.save(str(save_path))
-        print(f"  Saved: {save_path}")
+    # NOTE (correcao): antes o A4 nao era salvo, com a justificativa de que ja'
+    # existia como cql_best.d3. Nao e' o mesmo modelo: cql_best vem do NB-06,
+    # com 2.000 steps, e este vem da ablacao, com 5.000. Sem o arquivo, nao ha'
+    # como recuperar os PESOS do A4 depois (o parquet guarda so' os retornos), e
+    # turnover e concentracao ficam impossiveis de medir sem retreinar.
+    save_path = ROOT / "outputs" / "models" / f"cql_{name.lower()}.d3"
+    cql.save(str(save_path))
+    print(f"  Saved: {save_path}")
 
 # ── Benchmark metrics (eval period 2022-2024) ────────────────────────────────
 bench = pd.read_parquet(ROOT / "data" / "processed" / "benchmark_returns.parquet")
@@ -237,7 +240,10 @@ results_df.to_csv(csv_path)
 print(f"\nSaved: {csv_path}")
 
 # ── Save LaTeX ────────────────────────────────────────────────────────────────
-tex_str = results_df.to_latex(
+# escape=False: o cabecalho precisa sair em LaTeX valido, e `CVaR_0.95`
+# fora de modo matematico quebra a compilacao.
+results_tex = results_df.rename(columns={"CVaR_0.95": "CVaR$_{0.95}$"})
+tex_str = results_tex.to_latex(
     float_format="%.4f",
     escape=False,
     caption=(

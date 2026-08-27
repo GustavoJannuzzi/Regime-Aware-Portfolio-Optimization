@@ -83,7 +83,13 @@ A4_ann_ret   = get_main(A4_label, "ann_return")
 A4_maxdd     = get_main(A4_label, "max_dd")
 A4_calmar    = get_main(A4_label, "calmar")
 EW_sharpe    = get_main(EW_label, "sharpe")
-MVP_sharpe   = 0.3692  # from NB-04
+# NOTE (correcao): o Sharpe do MVP estava fixo em 0.3692, valor do NB-04, que e'
+# medido em 2016-2024. O A4 so' existe a partir de 2022, entao a diferenca
+# publicada comparava janelas diferentes. Agora sai da mesma tabela, na mesma
+# janela comum que o NB-08 monta.
+MVP_label = [idx for idx in main_df.index if "Variance" in str(idx) or "MVP" in str(idx)]
+MVP_label = MVP_label[0] if MVP_label else "MVP"
+MVP_sharpe   = get_main(MVP_label, "sharpe")
 A4_sharpe_diff     = A4_sharpe - EW_sharpe
 A4_sharpe_vs_mvp   = A4_sharpe - MVP_sharpe
 
@@ -106,8 +112,25 @@ def get_sub(period_key, strat_key, col):
                         pass
     return float("nan")
 
-A4_cvar_2022   = get_sub("2022", "A4", "CVaR\u2080.\u2089\u2085") or get_sub("2022", "A4", "CVaR_0.95") or get_sub("2022", "A4", "cvar_95")
-EW_cvar_2022   = get_sub("2022", "1/N",  "CVaR\u2080.\u2089\u2085") or get_sub("2022", "Equal", "CVaR_0.95") or get_sub("2022", "Equal", "cvar_95")
+# NOTE (correcao): isto era uma cadeia `a or b or c`. NaN e' truthy em Python,
+# entao um primeiro lookup falhado devolvia NaN e os fallbacks nunca rodavam,
+# e o NaN ia parar no texto do artigo. `primeiro_valido` so' aceita numero.
+def primeiro_valido(*valores: float) -> float:
+    for v in valores:
+        if v is not None and not np.isnan(v):
+            return v
+    return float("nan")
+
+A4_cvar_2022 = primeiro_valido(
+    get_sub("2022", "A4", "CVaR\u2080.\u2089\u2085"),
+    get_sub("2022", "A4", "CVaR_0.95"),
+    get_sub("2022", "A4", "cvar_95"),
+)
+EW_cvar_2022 = primeiro_valido(
+    get_sub("2022", "1/N", "CVaR\u2080.\u2089\u2085"),
+    get_sub("2022", "Equal", "CVaR_0.95"),
+    get_sub("2022", "Equal", "cvar_95"),
+)
 A4_sharpe_2023 = get_sub("2023", "A4",   "Sharpe")
 EW_sharpe_2023 = get_sub("2023", "1/N",  "Sharpe") or get_sub("2023", "Equal", "Sharpe")
 A4_ret_2024    = get_sub("2024", "A4",   "Ann.Return")
@@ -150,6 +173,22 @@ replacements = {
     r"A3\_sharpe":        fmt(A3_sharpe, 4),
     r"A3\_cvar":          fmt(A3_cvar, 4),
 }
+
+# NOTE (correcao): antes, um valor que nao fosse encontrado virava a string
+# "nan" e entrava no texto do artigo sem reclamar. Um numero ausente tem que
+# parar o processo, nao sair impresso.
+faltando = [k for k, v in {
+    "A4_sharpe": A4_sharpe, "A4_cvar": A4_cvar, "A4_ann_ret": A4_ann_ret,
+    "A4_maxdd": A4_maxdd, "A4_calmar": A4_calmar, "EW_sharpe": EW_sharpe,
+    "MVP_sharpe": MVP_sharpe, "A1_sharpe": A1_sharpe, "A1_cvar": A1_cvar,
+    "A2_sharpe": A2_sharpe, "A2_cvar": A2_cvar, "A3_sharpe": A3_sharpe,
+    "A3_cvar": A3_cvar, "A4_cvar_2022": A4_cvar_2022, "EW_cvar_2022": EW_cvar_2022,
+    "A4_sharpe_2023": A4_sharpe_2023, "EW_sharpe_2023": EW_sharpe_2023,
+    "A4_ret_2024": A4_ret_2024, "A4_sharpe_rising": A4_sharpe_rising,
+    "A4_sharpe_stable": A4_sharpe_stable,
+}.items() if v is None or np.isnan(v)]
+if faltando:
+    raise SystemExit(f"valores nao encontrados nas tabelas: {faltando}")
 
 print("Replacement values:")
 for k, v in replacements.items():

@@ -323,7 +323,7 @@ for reg_code, reg_name in regime_map.items():
         "Std (daily)": std_r,
         "Sharpe (ann.)": sharpe,
         "CVaR$_{0.95}$": cvar,
-        "Avg SELIC (%)": avg_selic,
+        "Avg SELIC (\\%)": avg_selic,
     })
 
 reg_df = pd.DataFrame(reg_rows).set_index("Regime")
